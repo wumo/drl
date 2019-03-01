@@ -23,6 +23,7 @@ class VPGBuffer:
         self.logp_buf = np.zeros(size, dtype=np.float32)
         self.gamma, self.lam = gamma, lam
         self.ptr, self.path_start_idx, self.max_size = 0, 0, size
+        self.num_episodes = 0
     
     def store(self, obs, act, rew, val, logp):
         """
@@ -64,6 +65,8 @@ class VPGBuffer:
         self.ret_buf[path_slice] = core.discount_cumsum(rews, self.gamma)[:-1]
         
         self.path_start_idx = self.ptr
+        
+        self.num_episodes += 1
     
     def get(self):
         """
@@ -72,12 +75,13 @@ class VPGBuffer:
         mean zero and std one). Also, resets some pointers in the buffer.
         """
         assert self.ptr == self.max_size  # buffer has to be full before you can get
-        self.ptr, self.path_start_idx = 0, 0
+        num_episodes = self.num_episodes
+        self.ptr, self.path_start_idx, self.num_episodes = 0, 0, 0
         # the next two lines implement the advantage normalization trick
         adv_mean, adv_std = core.statistics_scalar(self.adv_buf)
         self.adv_buf = (self.adv_buf - adv_mean) / adv_std
         return [self.obs_buf, self.act_buf, self.adv_buf,
-                self.ret_buf, self.logp_buf]
+                self.ret_buf, self.logp_buf, num_episodes]
 
 class DummyBody(nn.Module):
     def __init__(self, state_dim):
@@ -152,9 +156,8 @@ def mlp_actor_critic(observation_space, action_space, hidden_sizes=(32,), activa
     return net
 
 def vpg(env_fn, actor_critic=mlp_actor_critic, ac_kwargs=dict(), seed=0,
-        steps_per_epoch=4000, epochs=50, gamma=0.99, pi_lr=1e-2,
-        vf_lr=1e-3, train_v_iters=80, lam=0.97, max_ep_len=1000,
-        logger_kwargs=dict(), save_freq=10):
+        steps_per_epoch=5000, epochs=50, gamma=0.99, pi_lr=1e-2,
+        vf_lr=1e-2, train_v_iters=80, lam=0.97, max_ep_len=1000):
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
     np.random.seed(seed)
@@ -164,28 +167,31 @@ def vpg(env_fn, actor_critic=mlp_actor_critic, ac_kwargs=dict(), seed=0,
     act_dim = env.action_space.shape
     
     net = actor_critic(env.observation_space, env.action_space, **ac_kwargs)
-    params = [p for p in net.named_parameters()]
     actor_optimizer = torch.optim.Adam(net.actor_params + net.shared_params, lr=pi_lr)
     critic_optimizer = torch.optim.Adam(net.critic_params + net.shared_params, lr=vf_lr)
     
     buf = VPGBuffer(obs_dim, act_dim, steps_per_epoch, gamma, lam)
     
     def update():
-        batch_obs, batch_acts, batch_adv, batch_ret, batch_logp_old = tensors(buf.get())
+        batch_obs, batch_acts, batch_adv, batch_ret, batch_logp_old, num_episodes = tensors(buf.get())
         
         # VPG objectives
-        logp = net.actor(batch_obs, batch_acts)
-        logp.username = 'logp'
-        pi_loss = -(logp * batch_adv).mean()
-        pi_loss.username = 'pi_loss'
+        def policy_loss(states, actions, advantages, num_episodes):
+            log_prob = net.actor(states, actions)
+            return -(log_prob * advantages).sum() / num_episodes
+        
+        def value_loss(states, returns, num_episodes):
+            return 0.5 * (returns - net.critic(states)).pow(2).sum() / num_episodes
+        
+        pi_loss = policy_loss(batch_obs, batch_acts, batch_adv, num_episodes)
         actor_optimizer.zero_grad()
         pi_loss.backward()
         actor_optimizer.step()
         
-        v_loss_old = (batch_ret - net.critic(batch_obs)).pow(2).mean()
+        v_loss_old = value_loss(batch_obs, batch_ret, num_episodes)
         for _ in range(train_v_iters):
             # VPG objectives
-            v_loss = (batch_ret - net.critic(batch_obs)).pow(2).mean()
+            v_loss = value_loss(batch_obs, batch_ret, num_episodes)
             critic_optimizer.zero_grad()
             v_loss.backward()
             critic_optimizer.step()
@@ -195,14 +201,14 @@ def vpg(env_fn, actor_critic=mlp_actor_critic, ac_kwargs=dict(), seed=0,
         # Info (useful to watch during learning)
         logp = net.actor(batch_obs, batch_acts)
         
-        pi_loss_new = -(logp * batch_adv).mean()
-        v_loss_new = (batch_ret - net.critic(batch_obs)).pow(2).mean()
+        pi_loss_new = policy_loss(batch_obs, batch_acts, batch_adv, num_episodes)
+        v_loss_new = value_loss(batch_obs, batch_ret, num_episodes)
         approx_kl = (batch_logp_old - logp).mean()
         approx_entropy = (-logp).mean()
-        print(
-            f"lossPi={pi_loss},lossV={v_loss_old},"
-            f"kl={approx_kl},entropy={approx_entropy},"
-            f"deltaLossPi={pi_loss_new - pi_loss},deltaLossV={v_loss_new - v_loss_old}")
+        print(f"numEpisodes={num_episodes}"
+              f"lossPi={pi_loss},lossV={v_loss_old},"
+              f"kl={approx_kl},entropy={approx_entropy},"
+              f"deltaLossPi={pi_loss_new - pi_loss},deltaLossV={v_loss_new - v_loss_old}")
     
     obs, rew, done, ep_ret, ep_len = env.reset(), 0, False, 0, 0
     
@@ -235,8 +241,8 @@ def vpg(env_fn, actor_critic=mlp_actor_critic, ac_kwargs=dict(), seed=0,
         update()
         print(f"{np.mean(EpRet)},{np.mean(EpLen)}")
     
-    torch.save(net.state_dict(),"./trained_model/vpg.pt")
-    
+    torch.save(net.state_dict(), "./trained_model/vpg.pt")
+
 if __name__ == '__main__':
     import argparse
     
@@ -247,7 +253,7 @@ if __name__ == '__main__':
     parser.add_argument('--gamma', type=float, default=0.99)
     parser.add_argument('--seed', '-s', type=int, default=0)
     parser.add_argument('--cpu', type=int, default=1)
-    parser.add_argument('--steps', type=int, default=4000)
+    parser.add_argument('--steps', type=int, default=5000)
     parser.add_argument('--epochs', type=int, default=50)
     parser.add_argument('--exp_name', type=str, default='vpg')
     args = parser.parse_args()
