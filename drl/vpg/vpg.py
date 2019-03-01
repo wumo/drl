@@ -1,9 +1,12 @@
 import numpy as np
+import time
 import gym
 import torch
 import torch.nn  as nn
+import torch.nn.functional as F
 from torch.distributions.categorical import Categorical
-from drl.util.utils import tensor, tensors, layer_init, DEVICE
+from drl.util.logx import EpochLogger
+from drl.util.utils import tensor, tensors, layer_init, DEVICE, round_sig, statistics_scalar
 import drl.vpg.core as core
 
 class VPGBuffer:
@@ -78,7 +81,7 @@ class VPGBuffer:
         num_episodes = self.num_episodes
         self.ptr, self.path_start_idx, self.num_episodes = 0, 0, 0
         # the next two lines implement the advantage normalization trick
-        adv_mean, adv_std = core.statistics_scalar(self.adv_buf)
+        adv_mean, adv_std = statistics_scalar(self.adv_buf)
         self.adv_buf = (self.adv_buf - adv_mean) / adv_std
         return [self.obs_buf, self.act_buf, self.adv_buf,
                 self.ret_buf, self.logp_buf, num_episodes]
@@ -92,7 +95,7 @@ class DummyBody(nn.Module):
         return x
 
 class FCBody(nn.Module):
-    def __init__(self, state_dim, hidden_units=(32,), activation=torch.tanh):
+    def __init__(self, state_dim, hidden_units=(32,), activation=F.tanh):
         super(FCBody, self).__init__()
         
         dims = list(state_dim) + hidden_units
@@ -157,7 +160,9 @@ def mlp_actor_critic(observation_space, action_space, hidden_sizes=(32,), activa
 
 def vpg(env_fn, actor_critic=mlp_actor_critic, ac_kwargs=dict(), seed=0,
         steps_per_epoch=5000, epochs=50, gamma=0.99, pi_lr=1e-2,
-        vf_lr=1e-2, train_v_iters=80, lam=0.97, max_ep_len=1000):
+        vf_lr=1e-2, train_v_iters=80, lam=0.97, max_ep_len=1000, logger_kwargs=dict(), ):
+    logger = EpochLogger(**logger_kwargs)
+    
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
     np.random.seed(seed)
@@ -205,22 +210,22 @@ def vpg(env_fn, actor_critic=mlp_actor_critic, ac_kwargs=dict(), seed=0,
         v_loss_new = value_loss(batch_obs, batch_ret, num_episodes)
         approx_kl = (batch_logp_old - logp).mean()
         approx_entropy = (-logp).mean()
-        print(f"numEpisodes={num_episodes}"
-              f"lossPi={pi_loss},lossV={v_loss_old},"
-              f"kl={approx_kl},entropy={approx_entropy},"
-              f"deltaLossPi={pi_loss_new - pi_loss},deltaLossV={v_loss_new - v_loss_old}")
+        logger.store(LossPi=pi_loss.item(), LossV=v_loss_old.item(),
+                     KL=approx_kl.item(), Entropy=approx_entropy.item(),
+                     DeltaLossPi=(pi_loss_new - pi_loss).item(),
+                     DeltaLossV=(v_loss_new - v_loss_old).item())
     
+    start_time = time.time()
     obs, rew, done, ep_ret, ep_len = env.reset(), 0, False, 0, 0
     
     # Main loop: collect experience in env and update/log each epoch
     for epoch in range(epochs):
-        EpRet = []
-        EpLen = []
         for t in range(steps_per_epoch):
             action, v_t, log_prob_t = net(obs)
             
             # save
             buf.store(obs, action.item(), rew, v_t.item(), log_prob_t.item())
+            logger.store(Value=v_t.item())
             
             obs, rew, done, _ = env.step(action.item())
             ep_ret += rew
@@ -234,12 +239,25 @@ def vpg(env_fn, actor_critic=mlp_actor_critic, ac_kwargs=dict(), seed=0,
                 last_val = rew if done else net.critic(obs).item()
                 buf.finish_path(last_val)
                 if terminal:
-                    EpRet.append(ep_ret)
-                    EpLen.append(ep_len)
+                    # only save EpRet / EpLen if trajectory finished
+                    logger.store(EpRet=ep_ret, EpLen=ep_len)
                 obs, rew, done, ep_ret, ep_len = env.reset(), 0, False, 0, 0
         # Perform VPG update!
         update()
-        print(f"{np.mean(EpRet)},{np.mean(EpLen)}")
+        # Log info about epoch
+        logger.log_tabular('Epoch', epoch)
+        logger.log_tabular('EpRet', with_min_and_max=True)
+        logger.log_tabular('EpLen', average_only=True)
+        logger.log_tabular('Value', average_only=True)
+        logger.log_tabular('TotalEnvInteracts', (epoch + 1) * steps_per_epoch)
+        logger.log_tabular('LossPi', average_only=True)
+        logger.log_tabular('LossV', average_only=True)
+        logger.log_tabular('DeltaLossPi', average_only=True)
+        logger.log_tabular('DeltaLossV', average_only=True)
+        logger.log_tabular('Entropy', average_only=True)
+        logger.log_tabular('KL', average_only=True)
+        logger.log_tabular('Time', time.time() - start_time)
+        logger.dump_tabular()
     
     torch.save(net.state_dict(), "./trained_model/vpg.pt")
 

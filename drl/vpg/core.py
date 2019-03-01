@@ -24,20 +24,3 @@ def discount_cumsum(x, discount):
        x2]
   """
   return scipy.signal.lfilter([1], [1, float(-discount)], x[::-1], axis=0)[::-1]
-
-def statistics_scalar(x):
-  """
-  Get mean/std and optional min/max of scalar x .
-
-  Args:
-      x: An array containing samples of the scalar to produce statistics
-          for.
-
-  """
-  x = np.array(x, dtype=np.float32)
-  global_sum, global_n = np.sum(x), len(x)
-  mean = global_sum / global_n
-  
-  global_sum_sq = np.sum((x - mean) ** 2)
-  std = np.sqrt(global_sum_sq / global_n)  # compute global std
-  return mean, std
