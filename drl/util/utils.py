@@ -2,10 +2,6 @@ import torch
 import torch.nn  as nn
 from math import log10, floor
 
-def round_sig(x, sig=4):
-    x = float(x)
-    return round(x, sig - int(floor(log10(abs(x)))) - 1)
-
 DEVICE = torch.device('cuda:0')
 
 def layer_init(layer, w_scale=1.0):
