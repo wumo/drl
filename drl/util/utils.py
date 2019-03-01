@@ -29,12 +29,6 @@ def statistics_scalar(x, with_min_and_max=False):
         return mean, std, global_min, global_max
     return mean, std
 
-def layer_init(layer, w_scale=1.0):
-    nn.init.orthogonal_(layer.weight.data)
-    layer.weight.data.mul_(w_scale)
-    nn.init.constant_(layer.bias.data, 0)
-    return layer
-
 def tensor(x):
     if isinstance(x, torch.Tensor):
         return x

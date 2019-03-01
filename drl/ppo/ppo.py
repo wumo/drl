@@ -7,9 +7,18 @@ from drl.util.utils import tensors
 from drl.common.GAEBuffer import GAEBuffer
 from drl.common.network import mlp_actor_critic
 
-def vpg(env_fn, actor_critic=mlp_actor_critic, ac_kwargs=dict(), seed=0,
-        steps_per_epoch=5000, epochs=50, gamma=0.99, pi_lr=1e-2,
-        vf_lr=1e-2, train_v_iters=80, lam=0.97, max_ep_len=1000, logger_kwargs=dict(), ):
+"""
+
+Proximal Policy Optimization (by clipping),
+
+with early stopping based on approximate KL
+
+"""
+
+def ppo(env_fn, actor_critic=mlp_actor_critic, ac_kwargs=dict(), seed=0,
+        steps_per_epoch=4000, epochs=50, gamma=0.99, clip_ratio=0.2, pi_lr=1e-2,
+        vf_lr=1e-3, train_pi_iters=80, train_v_iters=80, lam=0.97, max_ep_len=1000,
+        target_kl=0.01, logger_kwargs=dict(), save_freq=10):
     logger = EpochLogger(**logger_kwargs)
     
     torch.manual_seed(seed)
@@ -30,18 +39,28 @@ def vpg(env_fn, actor_critic=mlp_actor_critic, ac_kwargs=dict(), seed=0,
         batch_obs, batch_acts, batch_adv, batch_ret, batch_logp_old = tensors(buf.get())
         
         # VPG objectives
-        def policy_loss(states, actions, advantages):
-            log_prob = net.actor(states, actions)
-            return -(log_prob * advantages).mean()
+        def policy_loss(states, actions, advantages, log_prob_old):
+            logp = net.actor(states, actions)
+            ratio = (logp - log_prob_old).exp()  # pi(a|s) / pi_old(a|s)
+            obj = ratio * advantages
+            obj_clipped = ratio.clamp(1.0 - clip_ratio, 1.0 + clip_ratio) * advantages
+            return -torch.min(obj, obj_clipped).mean(), (log_prob_old - logp).mean()
         
         def value_loss(states, returns):
             return 0.5 * (returns - net.critic(states)).pow(2).mean()
         
-        pi_loss = policy_loss(batch_obs, batch_acts, batch_adv)
-        actor_optimizer.zero_grad()
-        pi_loss.backward()
-        actor_optimizer.step()
-        
+        pi_loss_old, _ = policy_loss(batch_obs, batch_acts, batch_adv, batch_logp_old)
+        # Training policy network
+        for i in range(train_pi_iters):
+            pi_loss, kl = policy_loss(batch_obs, batch_acts, batch_adv, batch_logp_old)
+            actor_optimizer.zero_grad()
+            pi_loss.backward()
+            actor_optimizer.step()
+            if kl > 1.5 * target_kl:
+                logger.log('Early stopping at step %d due to reaching max kl.' % i)
+                break
+        logger.store(StopIter=i)
+        # Training value network
         v_loss_old = value_loss(batch_obs, batch_ret)
         for _ in range(train_v_iters):
             # VPG objectives
@@ -53,15 +72,17 @@ def vpg(env_fn, actor_critic=mlp_actor_critic, ac_kwargs=dict(), seed=0,
         # Log changes from update
         
         # Info (useful to watch during learning)
-        logp = net.actor(batch_obs, batch_acts)
-        
-        pi_loss_new = policy_loss(batch_obs, batch_acts, batch_adv)
+        pi_loss_new, kl = policy_loss(batch_obs, batch_acts, batch_adv, batch_logp_old)
         v_loss_new = value_loss(batch_obs, batch_ret)
-        approx_kl = (batch_logp_old - logp).mean()
+        logp = net.actor(batch_obs, batch_acts)
         approx_entropy = (-logp).mean()
-        logger.store(LossPi=pi_loss.item(), LossV=v_loss_old.item(),
-                     KL=approx_kl.item(), Entropy=approx_entropy.item(),
-                     DeltaLossPi=(pi_loss_new - pi_loss).item(),
+        ratio = (logp - batch_logp_old).exp()
+        clipped = ((ratio > (1 + clip_ratio)) + (ratio < (1 - clip_ratio))).clamp(0, 1)
+        clipfrac = clipped.float().mean()
+        logger.store(LossPi=pi_loss_old.item(), LossV=v_loss_old.item(),
+                     KL=kl.item(), Entropy=approx_entropy.item(),
+                     ClipFrac=clipfrac.item(),
+                     DeltaLossPi=(pi_loss_new - pi_loss_old).item(),
                      DeltaLossV=(v_loss_new - v_loss_old).item())
     
     start_time = time.time()
@@ -97,7 +118,7 @@ def vpg(env_fn, actor_critic=mlp_actor_critic, ac_kwargs=dict(), seed=0,
         logger.log_tabular('Epoch', epoch)
         logger.log_tabular('EpRet', with_min_and_max=True)
         logger.log_tabular('EpLen', average_only=True)
-        logger.log_tabular('Value', average_only=True)
+        logger.log_tabular('Value', with_min_and_max=True)
         logger.log_tabular('TotalEnvInteracts', (epoch + 1) * steps_per_epoch)
         logger.log_tabular('LossPi', average_only=True)
         logger.log_tabular('LossV', average_only=True)
@@ -105,10 +126,12 @@ def vpg(env_fn, actor_critic=mlp_actor_critic, ac_kwargs=dict(), seed=0,
         logger.log_tabular('DeltaLossV', average_only=True)
         logger.log_tabular('Entropy', average_only=True)
         logger.log_tabular('KL', average_only=True)
+        logger.log_tabular('ClipFrac', average_only=True)
+        logger.log_tabular('StopIter', average_only=True)
         logger.log_tabular('Time', time.time() - start_time)
         logger.dump_tabular()
     
-    torch.save(net.state_dict(), "./trained_model/vpg.pt")
+    # torch.save(net.state_dict(), "./trained_model/ppo.pt")
 
 if __name__ == '__main__':
     import argparse
@@ -122,9 +145,9 @@ if __name__ == '__main__':
     parser.add_argument('--cpu', type=int, default=1)
     parser.add_argument('--steps', type=int, default=5000)
     parser.add_argument('--epochs', type=int, default=50)
-    parser.add_argument('--exp_name', type=str, default='vpg')
+    parser.add_argument('--exp_name', type=str, default='ppo')
     args = parser.parse_args()
     
-    vpg(lambda: gym.make(args.env), actor_critic=mlp_actor_critic,
+    ppo(lambda: gym.make(args.env), actor_critic=mlp_actor_critic,
         ac_kwargs=dict(hidden_sizes=[args.hid] * args.l), gamma=args.gamma,
         seed=args.seed, steps_per_epoch=args.steps, epochs=args.epochs)
