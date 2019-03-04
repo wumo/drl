@@ -9,7 +9,9 @@ setup(
     'torch',
     'torchvision',
     'numpy',
-    'scipy'
+    'scipy',
+    'patchelf',
+    'mujoco-py',
   ],
   url='',
   license='',
