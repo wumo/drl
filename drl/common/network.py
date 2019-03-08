@@ -2,7 +2,7 @@ from gym.spaces import Box, Discrete
 import torch
 import torch.nn  as nn
 import torch.nn.functional as F
-from drl.util.utils import DEVICE, tensor
+from drl.util.utils import DEVICE, toTensor
 from torch.distributions.categorical import Categorical
 from torch.distributions.normal import Normal
 
@@ -52,7 +52,7 @@ class ActorCriticNet(nn.Module):
         self.shared_params = list(self.shared_body.parameters())
     
     def forward(self, obs):
-        obs = tensor(obs)
+        obs = toTensor(obs)
         shared = self.shared_body(obs)
         
         action, log_prob = self.actor(obs, None, shared)
@@ -63,7 +63,7 @@ class ActorCriticNet(nn.Module):
         raise NotImplementedError
     
     def critic(self, obs, shared=None):
-        if shared is None: shared = self.shared_body(tensor(obs))
+        if shared is None: shared = self.shared_body(toTensor(obs))
         return self.fc_critic(self.critic_body(shared))
 
 class CategoricalActorCriticNet(ActorCriticNet):
@@ -72,7 +72,7 @@ class CategoricalActorCriticNet(ActorCriticNet):
         self.to(DEVICE)
     
     def actor(self, obs, action=None, shared=None):
-        if shared is None: shared = self.shared_body(tensor(obs))
+        if shared is None: shared = self.shared_body(toTensor(obs))
         action_logits = self.fc_action(self.actor_body(shared))
         action_dist = Categorical(logits=action_logits)
         if action is None:
@@ -88,7 +88,7 @@ class GaussianActorCriticNet(ActorCriticNet):
         self.to(DEVICE)
     
     def actor(self, obs, action=None, shared=None):
-        if shared is None: shared = self.shared_body(tensor(obs))
+        if shared is None: shared = self.shared_body(toTensor(obs))
         action_mean = self.fc_action(self.actor_body(shared))
         action_dist = Normal(action_mean, F.softplus(self.std))
         if action is None:

@@ -3,7 +3,7 @@ import torch
 from drl.common.network import mlp_actor_critic
 
 if __name__ == '__main__':
-    saved = torch.load('vpg.pth')
+    saved = torch.load('model.pth')
     env = gym.make(saved['env'])
     state_dict = saved['model']
     ac_kwargs = saved['ac_kwargs']
@@ -15,7 +15,7 @@ if __name__ == '__main__':
     
     while True:
         a, _ = net.actor(obs)
-        obs, rew, done, _ = env.step(a.item())
+        obs, rew, done, _ = env.step(a.tolist())
         env.render()
         if done:
             obs = env.reset()

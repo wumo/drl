@@ -3,22 +3,23 @@ import time
 import gym
 import torch
 from drl.util.logx import EpochLogger
-from drl.util.utils import tensors
+from drl.util.utils import toTensors
 from drl.common.GAEBuffer import GAEBuffer
 from drl.common.network import mlp_actor_critic
 
 """
 
-Proximal Policy Optimization (by clipping),
+Proximal actor (by clipping),
 
 with early stopping based on approximate KL
 
 """
 
-def ppo(env_fn, actor_critic=mlp_actor_critic, ac_kwargs=dict(), seed=0,
-        steps_per_epoch=4000, epochs=50, gamma=0.99, clip_ratio=0.2, pi_lr=1e-2,
-        vf_lr=1e-3, train_pi_iters=80, train_v_iters=80, lam=0.97, max_ep_len=1000,
-        target_kl=0.01, logger_kwargs=dict(), save_freq=10):
+def trpo(env_fn, actor_critic=mlp_actor_critic, ac_kwargs=dict(), seed=0,
+         steps_per_epoch=4000, epochs=50, gamma=0.99, delta=0.01, vf_lr=1e-3,
+         train_v_iters=80, damping_coeff=0.1, cg_iters=10, backtrack_iters=10,
+         backtrack_coeff=0.8, lam=0.97, max_ep_len=1000, logger_kwargs=dict(),
+         save_freq=10, algo='trpo'):
     logger = EpochLogger(**logger_kwargs)
     
     torch.manual_seed(seed)
@@ -36,7 +37,7 @@ def ppo(env_fn, actor_critic=mlp_actor_critic, ac_kwargs=dict(), seed=0,
     buf = GAEBuffer(obs_dim, act_dim, steps_per_epoch, gamma, lam)
     
     def update():
-        batch_obs, batch_acts, batch_adv, batch_ret, batch_logp_old = tensors(buf.get())
+        batch_obs, batch_acts, batch_adv, batch_ret, batch_logp_old = toTensors(buf.get())
         
         # VPG objectives
         def policy_loss(states, actions, advantages, log_prob_old):
@@ -148,6 +149,6 @@ if __name__ == '__main__':
     parser.add_argument('--exp_name', type=str, default='ppo')
     args = parser.parse_args()
     
-    ppo(lambda: gym.make(args.env), actor_critic=mlp_actor_critic,
-        ac_kwargs=dict(hidden_sizes=[args.hid] * args.l), gamma=args.gamma,
-        seed=args.seed, steps_per_epoch=args.steps, epochs=args.epochs)
+    trpo(lambda: gym.make(args.env), actor_critic=mlp_actor_critic,
+         ac_kwargs=dict(hidden_sizes=[args.hid] * args.l), gamma=args.gamma,
+         seed=args.seed, steps_per_epoch=args.steps, epochs=args.epochs)

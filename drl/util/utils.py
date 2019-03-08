@@ -29,11 +29,11 @@ def statistics_scalar(x, with_min_and_max=False):
         return mean, std, global_min, global_max
     return mean, std
 
-def tensor(x):
+def toTensor(x):
     if isinstance(x, torch.Tensor):
         return x
     x = torch.tensor(x, device=DEVICE, dtype=torch.float32)
     return x
 
-def tensors(x):
-    return [tensor(i) for i in x]
+def toTensors(x):
+    return [toTensor(i) for i in x]
