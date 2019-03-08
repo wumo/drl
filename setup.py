@@ -14,6 +14,7 @@ setup(
         'mujoco-py',
         'atari-py',
         'tensorboardX',
+        'matplotlib'
     ],
     url='',
     license='',

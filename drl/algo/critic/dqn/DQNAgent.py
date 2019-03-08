@@ -1,6 +1,8 @@
 from drl.algo.BaseAgent import BaseAgent, BaseActor
-from drl.util.torch_utils import to_np, range_tensor
+from drl.util.torch_utils import to_np, range_tensor, toTensor
 import numpy as np
+import torch
+from torch.nn.utils import clip_grad_norm_
 
 class DQNActor(BaseActor):
     def __init__(self, config):
@@ -64,5 +66,32 @@ class DQNAgent(BaseAgent):
             experiences.append([state, action, reward, next_state, done])
         self.reply.store_batch(experiences)
         
-        if self.total_steps > self.config.exploration_steps:
-            experiences=self.reply.sample()
+        if self.total_steps > config.exploration_steps:
+            # minibatch gradient descent
+            experiences = self.reply.sample()
+            states, actions, rewards, next_states, terminals = experiences
+            states = config.state_normalizer(states)
+            next_states = config.state_normalizer(next_states)
+            q_next = self.target_network(next_states).detach()
+            if config.double_q:
+                best_actions = torch.argmax(self.network(next_states), dim=-1)
+                q_next = q_next[self.batch_indices, best_actions]
+            else:
+                q_next = q_next.max(1)[0]
+            terminals = toTensor(terminals)
+            rewards = toTensor(rewards)
+            q_next = rewards + config.discount * q_next * (1 - terminals)
+            
+            actions = toTensor(actions).long()
+            q = self.network(states)
+            q = q[self.batch_indices, actions]
+            
+            loss = (q_next - q).pow(2).mul(0.5).mean()
+            
+            self.optimizer.zero_grad()
+            loss.backward()
+            clip_grad_norm_(self.network.parameters(), config.gradient_clip)
+            self.optimizer.step()
+        
+        if self.total_steps / config.sgd_update_frequency % config.target_network_update_freq == 0:
+            self.target_network.load_state_dict(self.network.state_dict())

@@ -2,6 +2,10 @@
 import random
 import torch
 
+import torch
+import torch.backends.cudnn
+
+print(torch.backends.cudnn.is_acceptable(torch.cuda.FloatTensor([1.])))
 
 class DynamicNet(torch.nn.Module):
   def __init__(self, D_in, H, D_out):

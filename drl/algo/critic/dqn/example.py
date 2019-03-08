@@ -35,3 +35,6 @@ def dqn_cart_pole():
     # config.async_actor = False
     config.logger = get_logger(tag=dqn_cart_pole.__name__)
     run_steps(DQNAgent(config))
+
+if __name__ == '__main__':
+    dqn_cart_pole()

@@ -1,3 +1,5 @@
+from drl.common.Normalizer import RescaleNormalizer
+
 class DQNConfig:
     def __init__(self):
         self.task_fn = None
@@ -14,8 +16,8 @@ class DQNConfig:
         self.num_workers = 1
         self.gradient_clip = None
         self.target_network_mix = 0.001
-        self.state_normalizer = None
-        self.reward_normalizer = None
+        self.state_normalizer = RescaleNormalizer()
+        self.reward_normalizer = RescaleNormalizer()
         self.max_steps = 0
         self.rollout_length = None
         self.iteration_log_interval = 30
