@@ -1,9 +1,13 @@
 import datetime
 import time
 import numpy as np
+import json
+from drl.util.serialization import toJson
 
 def run_steps(agent):
     config = agent.config
+    output = json.dumps(toJson(config, 1), separators=(',', ':\t'), indent=4, sort_keys=True)
+    print(output)
     agent_name = agent.__class__.__name__
     t0 = time.time()
     while True:

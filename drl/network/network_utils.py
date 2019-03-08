@@ -4,11 +4,7 @@
 # declaration at the top                                              #
 #######################################################################
 
-import torch
 import torch.nn as nn
-import torch.nn.functional as F
-import numpy as np
-from drl.Config import Config
 
 class BaseNet:
     def __init__(self):

@@ -13,6 +13,9 @@ class DQNConfig:
         self.history_length = None
         self.double_q = False
         self.tag = 'dqn'
+        self.state_dim = None
+        self.action_dim = None
+        self.task_name = None
         self.num_workers = 1
         self.gradient_clip = None
         self.target_network_mix = 0.001
@@ -41,4 +44,4 @@ class DQNConfig:
         self.__eval_env = env
         self.state_dim = env.state_dim
         self.action_dim = env.action_dim
-        self.task_name = env.name
+        # self.task_name = env.name

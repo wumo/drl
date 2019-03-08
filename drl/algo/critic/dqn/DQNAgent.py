@@ -6,7 +6,7 @@ from torch.nn.utils import clip_grad_norm_
 
 class DQNActor(BaseActor):
     def __init__(self, config):
-        super().__init__(self, config)
+        BaseActor.__init__(self, config)
     
     def _transition(self):
         if self._state is None:
@@ -16,7 +16,7 @@ class DQNActor(BaseActor):
         q_values = to_np(q_values).flatten()
         action = np.random.randint(0, len(q_values)) \
             if self._total_steps < config.exploration_steps or np.random.rand() < config.random_action_prob() \
-            else np.max(q_values)
+            else np.argmax(q_values)
         next_state, reward, done, info = self._task.step([action])
         entry = [self._state[0], action, reward[0], next_state[0], int(done[0]), info]
         self._total_steps += 1
@@ -25,13 +25,13 @@ class DQNActor(BaseActor):
 
 class DQNAgent(BaseAgent):
     def __init__(self, config):
-        super().__init__(self, config)
+        BaseAgent.__init__(self, config)
         self.config = config
         
         self.reply = config.replay_fn()
         self.actor = DQNActor(config)
         
-        self.network = config.config.network_fn()
+        self.network = config.network_fn()
         self.target_network = config.network_fn()
         self.target_network.load_state_dict(self.network.state_dict())
         self.optimizer = config.optimizer_fn(self.network.parameters())

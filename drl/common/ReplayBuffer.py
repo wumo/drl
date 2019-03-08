@@ -5,7 +5,7 @@ class ReplayBuffer:
     def __init__(self, state_dim, action_dim, memory_size, batch_size):
         self.states = np.zeros([memory_size, state_dim], dtype=np.float32)
         self.next_states = np.zeros([memory_size, state_dim], dtype=np.float32)
-        self.actions = np.zeros([memory_size, action_dim], dtype=np.float32)
+        self.actions = np.zeros([memory_size, action_dim] if action_dim > 0 else memory_size, dtype=np.float32)
         self.rewards = np.zeros(memory_size, dtype=np.float32)
         self.dones = np.zeros(memory_size, dtype=np.float32)
         self.ptr = 0
@@ -30,8 +30,8 @@ class ReplayBuffer:
     def sample(self, batch_size=None):
         if batch_size is None: batch_size = self.batch_size
         sampled_indices = np.random.randint(0, self.size, size=batch_size)
-        return dict(states=self.states[sampled_indices],
-                    next_states=self.next_states[sampled_indices],
-                    actions=self.actions[sampled_indices],
-                    rewards=self.rewards[sampled_indices],
-                    dones=self.dones[sampled_indices])
+        return [self.states[sampled_indices],
+                self.actions[sampled_indices],
+                self.rewards[sampled_indices],
+                self.next_states[sampled_indices],
+                self.dones[sampled_indices]]

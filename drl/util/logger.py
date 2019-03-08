@@ -14,6 +14,7 @@ def get_logger(tag=None, skip=False, level=logging.INFO):
     logger = logging.getLogger()
     logger.setLevel(level)
     if tag is not None:
+        mkdir('./log')
         fh = logging.FileHandler('./log/%s-%s.txt' % (tag, get_time_str()))
         fh.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s: %(message)s'))
         fh.setLevel(level)

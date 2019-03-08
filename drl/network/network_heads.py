@@ -4,17 +4,18 @@
 # declaration at the top                                              #
 #######################################################################
 
-import torch.nn as nn
-from .network_utils import *
+from drl.common.DeviceSetting import DEVICE
 from .network_bodies import *
 from drl.util.utils import toTensor
+import torch
+import torch.nn.functional as F
 
 class VanillaNet(nn.Module, BaseNet):
     def __init__(self, output_dim, body):
         super(VanillaNet, self).__init__()
         self.fc_head = layer_init(nn.Linear(body.feature_dim, output_dim))
         self.body = body
-        self.to(Config.DEVICE)
+        self.to(DEVICE)
     
     def forward(self, x):
         phi = self.body(toTensor(x))
@@ -27,7 +28,7 @@ class DuelingNet(nn.Module, BaseNet):
         self.fc_value = layer_init(nn.Linear(body.feature_dim, 1))
         self.fc_advantage = layer_init(nn.Linear(body.feature_dim, action_dim))
         self.body = body
-        self.to(Config.DEVICE)
+        self.to(DEVICE)
     
     def forward(self, x, to_numpy=False):
         phi = self.body(toTensor(x))
@@ -43,7 +44,7 @@ class CategoricalNet(nn.Module, BaseNet):
         self.action_dim = action_dim
         self.num_atoms = num_atoms
         self.body = body
-        self.to(Config.DEVICE)
+        self.to(DEVICE)
     
     def forward(self, x):
         phi = self.body(toTensor(x))
@@ -59,7 +60,7 @@ class QuantileNet(nn.Module, BaseNet):
         self.action_dim = action_dim
         self.num_quantiles = num_quantiles
         self.body = body
-        self.to(Config.DEVICE)
+        self.to(DEVICE)
     
     def forward(self, x):
         phi = self.body(toTensor(x))
@@ -76,7 +77,7 @@ class OptionCriticNet(nn.Module, BaseNet):
         self.num_options = num_options
         self.action_dim = action_dim
         self.body = body
-        self.to(Config.DEVICE)
+        self.to(DEVICE)
     
     def forward(self, x):
         phi = self.body(toTensor(x))
@@ -116,7 +117,7 @@ class DeterministicActorCriticNet(nn.Module, BaseNet):
         self.network = ActorCriticNet(state_dim, action_dim, phi_body, actor_body, critic_body)
         self.actor_opt = actor_opt_fn(self.network.actor_params + self.network.phi_params)
         self.critic_opt = critic_opt_fn(self.network.critic_params + self.network.phi_params)
-        self.to(Config.DEVICE)
+        self.to(DEVICE)
     
     def forward(self, obs):
         phi = self.feature(obs)
@@ -143,7 +144,7 @@ class GaussianActorCriticNet(nn.Module, BaseNet):
         super(GaussianActorCriticNet, self).__init__()
         self.network = ActorCriticNet(state_dim, action_dim, phi_body, actor_body, critic_body)
         self.std = nn.Parameter(torch.zeros(action_dim))
-        self.to(Config.DEVICE)
+        self.to(DEVICE)
     
     def forward(self, obs, action=None):
         obs = toTensor(obs)
@@ -172,7 +173,7 @@ class CategoricalActorCriticNet(nn.Module, BaseNet):
                  critic_body=None):
         super(CategoricalActorCriticNet, self).__init__()
         self.network = ActorCriticNet(state_dim, action_dim, phi_body, actor_body, critic_body)
-        self.to(Config.DEVICE)
+        self.to(DEVICE)
     
     def forward(self, obs, action=None):
         obs = toTensor(obs)
