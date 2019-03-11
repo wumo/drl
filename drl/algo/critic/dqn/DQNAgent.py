@@ -29,15 +29,14 @@ class DQNAgent(BaseAgent):
         self.config = config
         
         self.reply = config.replay_fn()
-        self.actor = DQNActor(config)
         
         self.network = config.network_fn()
         self.target_network = config.network_fn()
         self.target_network.load_state_dict(self.network.state_dict())
         self.optimizer = config.optimizer_fn(self.network.parameters())
         
-        self.actor.set_network(self.network)
-        
+        self.task = config.task_fn()
+        self.states = self.task.reset()
         self.online_reward = 0
         
         self.batch_indices = range_tensor(self.reply.batch_size)
@@ -52,10 +51,22 @@ class DQNAgent(BaseAgent):
     
     def step(self):
         config = self.config
-        transitions = self.actor.step()
-        for state, action, reward, next_state, done, _ in transitions:
-            self.online_reward += reward
+        
+        # rollout
+        for _ in range(self.config.rollout_length):
+            # choose according to max(Q)
+            q_values = self.network(config.state_normalizer(self.states))
+            q_values = toNumpy(q_values).flatten()
+            action = np.random.randint(0, len(q_values)) \
+                if self.total_steps < config.exploration_steps or np.random.rand() < config.random_action_prob() \
+                else np.argmax(q_values)
+            
+            next_states, rewards, dones, info = self.task.step([action])
+            state, reward, next_state, done = self.states[0], rewards[0], next_states[0], int(dones[0])
+            self.states = next_states
             self.total_steps += 1
+            self.online_reward += reward
+            
             reward = config.reward_normalizer(reward)
             if done:
                 self.episode_rewards.append(self.online_reward)

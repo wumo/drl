@@ -25,7 +25,7 @@ class DQNConfig:
         self.max_steps = 0
         self.optimization_epochs = 4
         self.mini_batch_size = 64
-        self.sgd_update_frequency = None
+        self.rollout_length = None
         self.random_action_prob = None
         self.__eval_env = None
         self.log_interval = int(1e3)
