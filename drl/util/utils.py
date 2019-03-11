@@ -5,6 +5,11 @@ from math import log10, floor
 
 DEVICE = torch.device('cuda:0')
 
+def combined_shape(length, shape=None):
+    if (shape is None) or (shape==0) or (not shape):
+        return length,
+    return (length, shape) if np.isscalar(shape) else (length, *shape)
+
 def round_sig(x, sig=4):
     return round(x, sig - int(floor(log10(abs(x)))) - 1)
 

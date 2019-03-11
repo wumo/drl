@@ -25,7 +25,7 @@ def toTensor(x):
 def range_tensor(end):
     return torch.arange(end).long().to(DEVICE)
 
-def to_np(t):
+def toNumpy(t):
     return t.cpu().detach().numpy()
 
 def random_seed(seed=None):

@@ -16,7 +16,7 @@ class BaseActor:
     
     def _sample(self):
         transitions = []
-        for _ in range(self.config.sgd_update_frequency):
+        for _ in range(self.config.rollout_length):
             transitions.append(self._transition())
         return transitions
     
@@ -32,6 +32,8 @@ class BaseActor:
 class BaseAgent:
     def __init__(self, config):
         self.config = config
+        self.total_steps = 0
+        self.episode_rewards = []
     
     def save(self, filename):
         torch.save(self.network.state_dict(), filename)

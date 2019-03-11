@@ -20,9 +20,10 @@ class Task:
         env_makers = [configure_env_maker(env_name, seed, i) for i in range(num_envs)]
         Wrapper = SingleProcessVecEnv if single_process else SubProcessesVecEnv
         self.env = Wrapper(env_makers)
-        # self.name = env_name
+        self.name = env_name
         self.observation_space = self.env.observation_space
         self.state_dim = int(np.prod(self.env.observation_space.shape))
+        
         self.action_space = self.env.action_space
         if isinstance(self.action_space, Discrete):
             self.action_dim = self.action_space.n

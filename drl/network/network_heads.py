@@ -89,12 +89,12 @@ class OptionCriticNet(nn.Module, BaseNet):
         return q, beta, log_pi
 
 class ActorCriticNet(nn.Module):
-    def __init__(self, state_dim, action_dim, phi_body, actor_body, critic_body):
+    def __init__(self, state_dim, action_dim, shared_body, actor_body, critic_body):
         super(ActorCriticNet, self).__init__()
-        if phi_body is None: phi_body = DummyBody(state_dim)
-        if actor_body is None: actor_body = DummyBody(phi_body.feature_dim)
-        if critic_body is None: critic_body = DummyBody(phi_body.feature_dim)
-        self.phi_body = phi_body
+        if shared_body is None: shared_body = DummyBody(state_dim)
+        if actor_body is None: actor_body = DummyBody(shared_body.feature_dim)
+        if critic_body is None: critic_body = DummyBody(shared_body.feature_dim)
+        self.shared_body = shared_body
         self.actor_body = actor_body
         self.critic_body = critic_body
         self.fc_action = layer_init(nn.Linear(actor_body.feature_dim, action_dim), 1e-3)
@@ -102,7 +102,7 @@ class ActorCriticNet(nn.Module):
         
         self.actor_params = list(self.actor_body.parameters()) + list(self.fc_action.parameters())
         self.critic_params = list(self.critic_body.parameters()) + list(self.fc_critic.parameters())
-        self.phi_params = list(self.phi_body.parameters())
+        self.shared_params = list(self.shared_body.parameters())
 
 class DeterministicActorCriticNet(nn.Module, BaseNet):
     def __init__(self,
@@ -110,13 +110,13 @@ class DeterministicActorCriticNet(nn.Module, BaseNet):
                  action_dim,
                  actor_opt_fn,
                  critic_opt_fn,
-                 phi_body=None,
+                 shared_body=None,
                  actor_body=None,
                  critic_body=None):
         super(DeterministicActorCriticNet, self).__init__()
-        self.network = ActorCriticNet(state_dim, action_dim, phi_body, actor_body, critic_body)
-        self.actor_opt = actor_opt_fn(self.network.actor_params + self.network.phi_params)
-        self.critic_opt = critic_opt_fn(self.network.critic_params + self.network.phi_params)
+        self.network = ActorCriticNet(state_dim, action_dim, shared_body, actor_body, critic_body)
+        self.actor_opt = actor_opt_fn(self.network.actor_params + self.network.shared_params)
+        self.critic_opt = critic_opt_fn(self.network.critic_params + self.network.shared_params)
         self.to(DEVICE)
     
     def forward(self, obs):
@@ -126,7 +126,7 @@ class DeterministicActorCriticNet(nn.Module, BaseNet):
     
     def feature(self, obs):
         obs = toTensor(obs)
-        return self.network.phi_body(obs)
+        return self.network.shared_body(obs)
     
     def actor(self, phi):
         return F.tanh(self.network.fc_action(self.network.actor_body(phi)))
@@ -138,17 +138,17 @@ class GaussianActorCriticNet(nn.Module, BaseNet):
     def __init__(self,
                  state_dim,
                  action_dim,
-                 phi_body=None,
+                 shared_body=None,
                  actor_body=None,
                  critic_body=None):
         super(GaussianActorCriticNet, self).__init__()
-        self.network = ActorCriticNet(state_dim, action_dim, phi_body, actor_body, critic_body)
+        self.network = ActorCriticNet(state_dim, action_dim, shared_body, actor_body, critic_body)
         self.std = nn.Parameter(torch.zeros(action_dim))
         self.to(DEVICE)
     
     def forward(self, obs, action=None):
         obs = toTensor(obs)
-        phi = self.network.phi_body(obs)
+        phi = self.network.shared_body(obs)
         phi_a = self.network.actor_body(phi)
         phi_v = self.network.critic_body(phi)
         mean = F.tanh(self.network.fc_action(phi_a))
@@ -168,20 +168,20 @@ class CategoricalActorCriticNet(nn.Module, BaseNet):
     def __init__(self,
                  state_dim,
                  action_dim,
-                 phi_body=None,
+                 shared_body=None,
                  actor_body=None,
                  critic_body=None):
         super(CategoricalActorCriticNet, self).__init__()
-        self.network = ActorCriticNet(state_dim, action_dim, phi_body, actor_body, critic_body)
+        self.network = ActorCriticNet(state_dim, action_dim, shared_body, actor_body, critic_body)
         self.to(DEVICE)
     
     def forward(self, obs, action=None):
         obs = toTensor(obs)
-        phi = self.network.phi_body(obs)
-        phi_a = self.network.actor_body(phi)
-        phi_v = self.network.critic_body(phi)
-        logits = self.network.fc_action(phi_a)
-        v = self.network.fc_critic(phi_v)
+        shared = self.network.shared_body(obs)
+        shared_a = self.network.actor_body(shared)
+        shared_v = self.network.critic_body(shared)
+        logits = self.network.fc_action(shared_a)
+        v = self.network.fc_critic(shared_v)
         dist = torch.distributions.Categorical(logits=logits)
         if action is None:
             action = dist.sample()

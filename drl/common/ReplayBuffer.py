@@ -1,11 +1,12 @@
 import numpy as np
+from drl.util.utils import combined_shape
 
 class ReplayBuffer:
     
     def __init__(self, state_dim, action_dim, memory_size, batch_size):
         self.states = np.zeros([memory_size, state_dim], dtype=np.float32)
         self.next_states = np.zeros([memory_size, state_dim], dtype=np.float32)
-        self.actions = np.zeros([memory_size, action_dim] if action_dim > 0 else memory_size, dtype=np.float32)
+        self.actions = np.zeros(combined_shape(memory_size, action_dim), dtype=np.float32)
         self.rewards = np.zeros(memory_size, dtype=np.float32)
         self.dones = np.zeros(memory_size, dtype=np.float32)
         self.ptr = 0

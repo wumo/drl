@@ -1,30 +1,28 @@
 from drl.common.Normalizer import RescaleNormalizer
 
-class DQNConfig:
+class A2CConfig:
     def __init__(self):
         self.task_fn = None
         self.optimizer_fn = None
         self.network_fn = None
-        self.replay_fn = None
         self.discount = None
-        self.target_network_update_freq = None
-        self.exploration_steps = None
         self.logger = None
         self.history_length = None
-        self.double_q = False
-        self.tag = 'dqn'
+        self.tag = 'a2c'
         self.state_dim = None
         self.action_dim = None
         self.task_name = None
         self.num_workers = 1
         self.gradient_clip = None
+        self.entropy_weight = 0
+        self.use_gae = False
+        self.gae_tau = 1.0
         self.state_normalizer = RescaleNormalizer()
         self.reward_normalizer = RescaleNormalizer()
         self.max_steps = 0
+        self.rollout_length = None
         self.optimization_epochs = 4
         self.mini_batch_size = 64
-        self.sgd_update_frequency = None
-        self.random_action_prob = None
         self.__eval_env = None
         self.log_interval = int(1e3)
         self.save_interval = 0
