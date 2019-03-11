@@ -15,6 +15,7 @@ class A2CConfig:
         self.num_workers = 1
         self.gradient_clip = None
         self.entropy_weight = 0
+        self.value_loss_weight = 1.0
         self.use_gae = False
         self.gae_tau = 1.0
         self.state_normalizer = RescaleNormalizer()

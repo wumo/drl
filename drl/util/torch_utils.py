@@ -28,9 +28,10 @@ def range_tensor(end):
 def toNumpy(t):
     return t.cpu().detach().numpy()
 
-def random_seed(seed=None):
+def random_seed(seed=np.random.randint(int(1e6))):
     np.random.seed(seed)
-    torch.manual_seed(np.random.randint(int(1e6)))
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
 
 def set_one_thread():
     os.environ['OMP_NUM_THREADS'] = '1'

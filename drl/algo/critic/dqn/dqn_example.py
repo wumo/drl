@@ -8,6 +8,7 @@ from drl.common.ReplayBuffer import ReplayBuffer
 from drl.common.Schedule import LinearSchedule
 from drl.common.run_utils import run_steps
 from drl.util.logger import get_logger
+from drl.util.torch_utils import random_seed, select_device
 
 def dqn_cart_pole(game):
     config = DQNConfig()
@@ -58,6 +59,8 @@ def dqn_pixel_atari(game):
     run_steps(DQNAgent(config))
 
 if __name__ == '__main__':
+    random_seed()
+    select_device(0)
     # game = 'MountainCar-v0'
     game = 'CartPole-v0'
     # game = 'BreakoutNoFrameskip-v4'
