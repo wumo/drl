@@ -29,19 +29,15 @@ class AdvantageBuffer:
     """
     
     def __init__(self, config):
-        state_dim = config.state_dim
-        action_dim = config.action_dim
         size = config.rollout_length
-        gamma = config.gamma  # 0.99
-        lam = config.tau  # 0.95
-        self.states = np.zeros(combined_shape(size, state_dim), dtype=np.float32)
-        self.actions = np.zeros(combined_shape(size, action_dim), dtype=np.float32)
-        self.advantages = np.zeros(size, dtype=np.float32)
-        self.rewards = np.zeros(size, dtype=np.float32)
-        self.returns = np.zeros(size, dtype=np.float32)
-        self.values = np.zeros(size, dtype=np.float32)
-        self.log_pis = np.zeros(size, dtype=np.float32)
-        self.gamma, self.lam = gamma, lam
+        self.states = np.zeros(combined_shape(size, config.state_dim), dtype=np.float32)
+        self.actions = np.zeros(combined_shape(size, config.action_dim), dtype=np.float32)
+        self.advantages = np.zeros((size, config.num_workers), dtype=np.float32)
+        self.rewards = np.zeros((size, config.num_workers), dtype=np.float32)
+        self.returns = np.zeros((size, config.num_workers), dtype=np.float32)
+        self.values = np.zeros((size, config.num_workers), dtype=np.float32)
+        self.log_pis = np.zeros((size, config.num_workers), dtype=np.float32)
+        self.gamma, self.lamba = config.discount, config.lamba
         self.ptr, self.path_start_idx, self.max_size = 0, 0, size
     
     def store(self, obs, act, rew, val, logp):
@@ -78,7 +74,7 @@ class AdvantageBuffer:
         
         # the next two lines implement GAE-Lambda advantage calculation
         deltas = rews[:-1] + self.gamma * vals[1:] - vals[:-1]
-        self.advantages[path_slice] = discount_cumsum(deltas, self.gamma * self.lam)
+        self.advantages[path_slice] = discount_cumsum(deltas, self.gamma * self.lamba)
         
         # the next line computes rewards-to-go, to be targets for the value function
         self.returns[path_slice] = discount_cumsum(rews, self.gamma)[:-1]

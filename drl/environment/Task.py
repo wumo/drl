@@ -23,8 +23,10 @@ class Task:
         self.name = env_name
         self.observation_space = self.env.observation_space
         self.state_dim = int(np.prod(self.env.observation_space.shape))
+        self.state_shape = self.observation_space.shape
         
         self.action_space = self.env.action_space
+        self.action_shape = self.action_space.shape
         if isinstance(self.action_space, Discrete):
             self.action_dim = self.action_space.n
         elif isinstance(self.action_space, Box):

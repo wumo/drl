@@ -18,7 +18,7 @@ class A2CActor(BaseActor):
         
         self._total_steps += 1
         self._states = next_states
-        return entry
+        return [prediction, self._states, rewards, next_states, terminals]
 
 class A2CAgent(BaseAgent):
     def __init__(self, config):
@@ -27,16 +27,12 @@ class A2CAgent(BaseAgent):
         
         self.network = config.network_fn()
         self.optimizer = config.optimizer_fn(self.network.parameters())
-
+        
         self.actor = A2CActor(config)
         self.actor.set_network(self.network)
         self.buffer = AdvantageBuffer(config)
         
-        self.episode_rewards = []
-        self.online_reward = np.zeros(config.num_workers)
-        
-        self.total_steps = 0
-        self.batch_indices = range_tensor(self.reply.batch_size)
+        self.online_rewards = np.zeros(config.num_workers)
     
     def eval_step(self, state):
         self.config.state_normalizer.set_read_only()
@@ -49,16 +45,17 @@ class A2CAgent(BaseAgent):
     def step(self):
         config = self.config
         transitions = self.actor.step()
-        experiences = []
-        for state, action, reward, next_state, done, _ in transitions:
-            self.episode_reward += reward
-            self.total_steps += 1
-            reward = config.reward_normalizer(reward)
-            if done:
-                self.episode_rewards.append(self.episode_reward)
-                self.episode_reward = 0
-            experiences.append([state, action, reward, next_state, done])
-        self.reply.store_batch(experiences)
+        for prediction, states, rewards, next_states, terminals, _ in transitions:
+            self.online_rewards += rewards
+            rewards = config.reward_normalizer(rewards)
+            for i, terminal in enumerate(terminals):
+                if terminals[i]:
+                    self.episode_rewards.append(self.online_rewards[i])
+                    self.online_rewards[i] = 0
+            self.buffer.store(states, toNumpy(prediction['a']), rewards, toNumpy(prediction['v']),
+                              toNumpy(prediction['log_pi_a']))
+        
+        states, actions, advantages, returns, log_pis = self.buffer.get()
         
         if self.total_steps > config.exploration_steps:
             # minibatch gradient descent

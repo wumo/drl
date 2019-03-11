@@ -2,13 +2,20 @@ import torch
 import torch.nn  as nn
 import numpy as np
 from math import log10, floor
+from collections import Iterable
 
 DEVICE = torch.device('cuda:0')
 
-def combined_shape(length, shape=None):
-    if (shape is None) or (shape==0) or (not shape):
-        return length,
-    return (length, shape) if np.isscalar(shape) else (length, *shape)
+def combined_shape(*shapes):
+    out_shapes = []
+    for shape in shapes:
+        if np.isscalar(shape):
+            out_shapes.append(shape)
+        elif isinstance(shape, Iterable):
+            out_shapes.extend(shape)
+        else:
+            raise Exception(f'not supported shape type: {shape}')
+    return tuple(out_shapes)
 
 def round_sig(x, sig=4):
     return round(x, sig - int(floor(log10(abs(x)))) - 1)

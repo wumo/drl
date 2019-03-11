@@ -38,7 +38,7 @@ class DQNAgent(BaseAgent):
         
         self.actor.set_network(self.network)
         
-        self.episode_reward = 0
+        self.online_reward = 0
         
         self.batch_indices = range_tensor(self.reply.batch_size)
     
@@ -54,12 +54,12 @@ class DQNAgent(BaseAgent):
         config = self.config
         transitions = self.actor.step()
         for state, action, reward, next_state, done, _ in transitions:
-            self.episode_reward += reward
+            self.online_reward += reward
             self.total_steps += 1
             reward = config.reward_normalizer(reward)
             if done:
-                self.episode_rewards.append(self.episode_reward)
-                self.episode_reward = 0
+                self.episode_rewards.append(self.online_reward)
+                self.online_reward = 0
             self.reply.store([state, action, reward, next_state, done])
         
         if self.total_steps > config.exploration_steps:

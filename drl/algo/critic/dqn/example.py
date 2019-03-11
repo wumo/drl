@@ -18,7 +18,7 @@ def dqn_cart_pole(game):
     config.network_fn = lambda: VanillaNet(config.action_dim, FCBody(config.state_dim))
     # config.network_fn = lambda: DuelingNet(config.action_dim, FCBody(config.state_dim))
     
-    config.replay_fn = lambda: ReplayBuffer(config.state_dim, (),
+    config.replay_fn = lambda: ReplayBuffer(config.state_shape, config.action_shape,
                                             memory_size=int(1e4), batch_size=10)
     
     config.random_action_prob = LinearSchedule(1.0, 0.1, 1e4)

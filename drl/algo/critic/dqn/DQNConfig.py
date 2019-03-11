@@ -14,7 +14,9 @@ class DQNConfig:
         self.double_q = False
         self.tag = 'dqn'
         self.state_dim = None
+        self.state_shape = None
         self.action_dim = None
+        self.action_shape = None
         self.task_name = None
         self.num_workers = 1
         self.gradient_clip = None
@@ -40,5 +42,7 @@ class DQNConfig:
     def eval_env(self, env):
         self.__eval_env = env
         self.state_dim = env.state_dim
+        self.state_shape = env.state_shape
         self.action_dim = env.action_dim
+        self.action_shape = env.action_shape
         self.task_name = env.name
