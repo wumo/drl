@@ -7,6 +7,7 @@ from torch.nn.utils import clip_grad_norm_
 class VPGStorageBuffer(StorageBuffer):
     def __init__(self, size):
         StorageBuffer.__int__(self, size)
+        self.states = [None] * size
         self.actions = [None] * size
         self.rewards = [None] * size
         self.values = [None] * size
@@ -22,7 +23,8 @@ class VPGAgent(BaseAgent):
         self.config = config
         
         self.network = config.network_fn()
-        self.optimizer = config.optimizer_fn(self.network.parameters())
+        self.actor_optimizer = config.optimizer_fn(self.network.actor_params + self.network.shared_params)
+        self.critic_optimizer = config.optimizer_fn(self.network.critic_params + self.network.shared_params)
         
         self.task = config.task_fn()
         self.states = self.task.reset()
@@ -42,7 +44,8 @@ class VPGAgent(BaseAgent):
                 if terminals[i]:
                     self.episode_rewards.append(self.online_rewards[i])
                     self.online_rewards[i] = 0
-            storage.store_next(actions=action_tr,
+            storage.store_next(states=toTensor(states),
+                               actions=action_tr,
                                values=v_tr,
                                log_pi=log_prob_tr,
                                entropy=entropy_tr,
@@ -67,15 +70,19 @@ class VPGAgent(BaseAgent):
             storage.advantages[i] = advantages.detach()
             storage.returns[i] = returns.detach()
         
-        log_prob, value, returns, advantages, entropy = storage.cat(
-            ['log_pi', 'values', 'returns', 'advantages', 'entropy'])
-        policy_loss = -(log_prob * advantages).mean()
+        states, actions, log_prob_old, returns, advantages = storage.cat(
+            ['states', 'actions', 'log_pi', 'returns', 'advantages'])
+        actions = actions.detach()
+        log_prob_old = log_prob_old.detach()
+        advantages = (advantages - advantages.mean()) / advantages.std()
+        
+        policy_loss = -(log_prob_old * advantages).mean()
         value_loss = 0.5 * (returns - value).pow(2).mean()
         entropy_loss = entropy.mean()
         loss = policy_loss - config.entropy_weight * entropy_loss + config.value_loss_weight * value_loss
-        self.optimizer.zero_grad()
+        self.actor_optimizer.zero_grad()
         loss.backward()
         clip_grad_norm_(self.network.parameters(), config.gradient_clip)
-        self.optimizer.step()
+        self.actor_optimizer.step()
         
         self.total_steps += config.rollout_length * config.num_workers

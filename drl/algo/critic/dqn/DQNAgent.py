@@ -4,6 +4,7 @@ import numpy as np
 import torch
 from torch.nn.utils import clip_grad_norm_
 
+# Human-level control through deep reinforcement (DQN)
 class DQNAgent(BaseAgent):
     def __init__(self, config):
         BaseAgent.__init__(self, config)
@@ -36,11 +37,11 @@ class DQNAgent(BaseAgent):
         # rollout
         for _ in range(self.config.rollout_length):
             # choose according to max(Q)
-            q_values = self.network(config.state_normalizer(self.states))
-            q_values = toNumpy(q_values).flatten()
-            action = np.random.randint(0, len(q_values)) \
+            q = self.network(config.state_normalizer(self.states))
+            q = toNumpy(q)
+            action = np.random.randint(0, len(q)) \
                 if self.total_steps < config.exploration_steps or np.random.rand() < config.random_action_prob() \
-                else np.argmax(q_values)
+                else np.argmax(q)
             
             next_states, rewards, dones, info = self.task.step([action])
             state, reward, next_state, done = self.states[0], rewards[0], next_states[0], int(dones[0])

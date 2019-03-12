@@ -1,12 +1,11 @@
 from drl.common.Normalizer import RescaleNormalizer
 
-class DQNConfig:
+class NStepDQNConfig:
     def __init__(self):
         self.log_dir = None
         self.task_fn = None
         self.optimizer_fn = None
         self.network_fn = None
-        self.replay_fn = None
         self.discount = None
         self.target_network_update_freq = None
         self.exploration_steps = None

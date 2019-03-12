@@ -22,7 +22,7 @@ def vpg_cart_pole(game):
     config.use_gae = True
     config.gae_tau = 0.97
     config.entropy_weight = 0.001
-    config.rollout_length =
+    config.rollout_length = 4000
     config.gradient_clip = 5
     config.logger = get_logger(tag=vpg_cart_pole.__name__)
     run_steps(VPGAgent(config))

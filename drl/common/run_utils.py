@@ -1,11 +1,7 @@
-import datetime
 import time
 import numpy as np
 import json
 from drl.util.serialization import toJson
-from drl.util.plot import plot
-import logging
-import matplotlib.pyplot as plt
 
 def run_steps(agent):
     config = agent.config
