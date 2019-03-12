@@ -4,7 +4,7 @@ from drl.util.torch_utils import toNumpy, range_tensor, toTensor
 import numpy as np
 from torch.nn.utils import clip_grad_norm_
 
-class A2CStorageBuffer(StorageBuffer):
+class VPGStorageBuffer(StorageBuffer):
     def __init__(self, size):
         StorageBuffer.__int__(self, size)
         self.actions = [None] * size
@@ -16,7 +16,7 @@ class A2CStorageBuffer(StorageBuffer):
         self.advantages = [None] * size
         self.returns = [None] * size
 
-class A2CAgent(BaseAgent):
+class VPGAgent(BaseAgent):
     def __init__(self, config):
         BaseAgent.__init__(self, config)
         self.config = config
@@ -31,7 +31,7 @@ class A2CAgent(BaseAgent):
     
     def step(self):
         config = self.config
-        storage = A2CStorageBuffer(config.rollout_length)
+        storage = VPGStorageBuffer(config.rollout_length)
         states = self.states
         for _ in range(config.rollout_length):
             action_tr, log_prob_tr, entropy_tr, v_tr = self.network(config.state_normalizer(states))

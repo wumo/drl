@@ -1,27 +1,8 @@
-from drl.algo.BaseAgent import BaseAgent, BaseActor
+from drl.algo.BaseAgent import BaseAgent
 from drl.util.torch_utils import toNumpy, range_tensor, toTensor
 import numpy as np
 import torch
 from torch.nn.utils import clip_grad_norm_
-
-class DQNActor(BaseActor):
-    def __init__(self, config):
-        BaseActor.__init__(self, config)
-    
-    def _transition(self):
-        if self._state is None:
-            self._state = self._task.reset()
-        config = self.config
-        q_values = self._network(config.state_normalizer(self._state))
-        q_values = toNumpy(q_values).flatten()
-        action = np.random.randint(0, len(q_values)) \
-            if self._total_steps < config.exploration_steps or np.random.rand() < config.random_action_prob() \
-            else np.argmax(q_values)
-        next_state, reward, done, info = self._task.step([action])
-        entry = [self._state[0], action, reward[0], next_state[0], int(done[0]), info]
-        self._total_steps += 1
-        self._state = next_state
-        return entry
 
 class DQNAgent(BaseAgent):
     def __init__(self, config):

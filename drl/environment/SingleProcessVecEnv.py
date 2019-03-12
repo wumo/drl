@@ -7,7 +7,11 @@ class SingleProcessVecEnv(VecEnv):
         first_env = self.envs[0]
         VecEnv.__init__(self, len(self.envs), first_env.observation_space, first_env.action_space)
         self.actions = None
-    
+
+    def close_extras(self):
+        for env in self.envs:
+            env.close()
+
     def reset(self):
         return [env.reset() for env in self.envs]
     

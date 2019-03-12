@@ -3,6 +3,9 @@ import time
 import numpy as np
 import json
 from drl.util.serialization import toJson
+from drl.util.plot import plot
+import logging
+import matplotlib.pyplot as plt
 
 def run_steps(agent):
     config = agent.config
@@ -17,13 +20,16 @@ def run_steps(agent):
                 and len(agent.episode_rewards):
             rewards = agent.episode_rewards
             agent.episode_rewards = []
+            mean_rewards, media_rewards, min_rewards, max_rewards, steps_per_s = np.mean(rewards), np.median(
+                rewards), np.min(rewards), np.max(rewards), config.log_interval / (time.time() - t0)
+            config.logger.add_scalar("mean_rewards", mean_rewards, agent.total_steps)
             config.logger.info(f'total steps {agent.total_steps}, '
-                               f'returns {np.mean(rewards):.2f}'
-                               f'/{np.median(rewards):.2f}'
-                               f'/{np.min(rewards):.2f}'
-                               f'/{np.max(rewards)} '
+                               f'returns {mean_rewards:.2f}'
+                               f'/{media_rewards:.2f}'
+                               f'/{min_rewards:.2f}'
+                               f'/{max_rewards} '
                                f'(mean/median/min/max), '
-                               f'{config.log_interval / (time.time() - t0):.2f} steps/s')
+                               f'{steps_per_s:.2f} steps/s')
             t0 = time.time()
         if config.eval_interval and (agent.total_steps % config.eval_interval == 0):
             agent.eval_episodes()

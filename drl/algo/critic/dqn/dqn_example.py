@@ -9,10 +9,12 @@ from drl.common.Schedule import LinearSchedule
 from drl.common.run_utils import run_steps
 from drl.util.logger import get_logger
 from drl.util.torch_utils import random_seed, select_device
+from drl.util.misc import get_default_log_dir
 
 def dqn_cart_pole(game):
     config = DQNConfig()
-    config.task_fn = lambda: Task(game)
+    config.log_dir = get_default_log_dir(dqn_cart_pole.__name__)
+    config.task_fn = lambda: Task(game, log_dir=config.log_dir)
     config.eval_env = Task(game)
     
     config.optimizer_fn = lambda params: RMSprop(params, 0.001)
@@ -30,12 +32,14 @@ def dqn_cart_pole(game):
     config.rollout_length = 4
     config.gradient_clip = 5
     config.eval_interval = int(5e3)
-    config.logger = get_logger(tag=dqn_cart_pole.__name__)
+    config.max_steps = 1e6
+    config.logger = get_logger(dqn_cart_pole.__name__)
     run_steps(DQNAgent(config))
 
 def dqn_pixel_atari(game):
     config = DQNConfig()
-    config.task_fn = lambda: Task(game)
+    log_dir = get_default_log_dir(dqn_cart_pole.__name__)
+    config.task_fn = lambda: Task(game, log_dir=log_dir)
     config.eval_env = Task(game)
     
     config.optimizer_fn = lambda params: RMSprop(params, lr=0.00025, alpha=0.95, eps=0.01, centered=True)
@@ -55,7 +59,7 @@ def dqn_pixel_atari(game):
     config.gradient_clip = 0.5
     config.eval_interval = int(5e3)
     config.max_steps = 1e5
-    config.logger = get_logger(tag=dqn_cart_pole.__name__)
+    config.logger = get_logger(dqn_cart_pole.__name__)
     run_steps(DQNAgent(config))
 
 if __name__ == '__main__':

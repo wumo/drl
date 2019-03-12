@@ -1,34 +1,6 @@
 import torch
 import numpy as np
 
-class BaseActor:
-    def __init__(self, config):
-        self.config = config
-        
-        self._state = None
-        self._task = None
-        self._network = None
-        self._total_steps = 0
-        
-        self.step = self._sample
-        self._set_up()
-        self._task = config.task_fn()
-    
-    def _sample(self):
-        transitions = []
-        for _ in range(self.config.rollout_length):
-            transitions.append(self._transition())
-        return transitions
-    
-    def _transition(self):
-        raise NotImplementedError
-    
-    def _set_up(self):
-        pass
-    
-    def set_network(self, net):
-        self._network = net
-
 class BaseAgent:
     def __init__(self, config):
         self.config = config
@@ -43,7 +15,7 @@ class BaseAgent:
         self.network.load_state_dict(state_dict)
     
     def eval_step(self, state):
-        raise NotImplementedError
+        pass
     
     def eval_episode(self):
         env = self.config.eval_env
@@ -61,8 +33,13 @@ class BaseAgent:
         rewards = []
         for ep in range(self.config.eval_episodes):
             rewards.append(self.eval_episode())
-        self.config.logger.info(f'evaluation episode return: {np.mean(rewards)}'
-                                f'({np.std(rewards) / np.sqrt(len(rewards))})')
+        mean_rewards,std=np.mean(rewards),np.std(rewards) / np.sqrt(len(rewards))
+        self.config.logger.info(f'evaluation episode return: {mean_rewards}'
+                                f'({std})')
+        self.config.logger.add_scalar("eval_mean_rewards", mean_rewards, self.total_steps)
     
     def step(self):
         raise NotImplementedError
+
+    def close(self):
+        self.task.close()

@@ -6,20 +6,22 @@
 
 from tensorboardX import SummaryWriter
 import logging
+from pathlib import Path
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s: %(message)s')
 from .misc import *
 
 def get_logger(tag=None, skip=False, level=logging.INFO):
+    log_dir = str(Path.home())
     logger = logging.getLogger()
     logger.setLevel(level)
     if tag is not None:
-        mkdir('./log')
-        fh = logging.FileHandler('./log/%s-%s.txt' % (tag, get_time_str()))
+        mkdir(f'{log_dir}/log')
+        fh = logging.FileHandler(f'{log_dir}/log/%s-%s.txt' % (tag, get_time_str()))
         fh.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s: %(message)s'))
         fh.setLevel(level)
         logger.addHandler(fh)
-    return Logger(logger, './tf_log/logger-%s-%s' % (tag, get_time_str()), skip)
+    return Logger(logger, f'{log_dir}/tf_log/logger-{tag}-{get_time_str()}', skip)
 
 class Logger(object):
     def __init__(self, vanilla_logger, log_dir, skip=False):

@@ -1,5 +1,6 @@
 class VecEnv:
     def __init__(self, num_envs, observation_space, action_space):
+        self.viewer=None
         self.closed = False
         self.num_envs = num_envs
         self.observation_space = observation_space
