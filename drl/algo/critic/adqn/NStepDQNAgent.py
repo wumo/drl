@@ -1,7 +1,8 @@
 from drl.algo.BaseAgent import BaseAgent
-from drl.util.torch_utils import toNumpy, range_tensor, toTensor, epsilon_greedy
+from drl.util.torch_utils import toNumpy, range_tensor, toTensor, epsilon_greedy, huber_loss
 import numpy as np
 import torch
+import torch.nn.functional as F
 from torch.nn.utils import clip_grad_norm_
 
 # Asynchronous Methods for Deep Reinforcement Learning
@@ -69,6 +70,8 @@ class NStepDQNAgent(BaseAgent):
             processed_rollout[i] = [q, returns]
         
         q, returns = map(lambda x: torch.cat(x, dim=0), zip(*processed_rollout))
+        # loss = F.smooth_l1_loss(q, returns)
+        # loss = huber_loss(q - returns)
         loss = 0.5 * (q - returns).pow(2).mean()
         self.optimizer.zero_grad()
         loss.backward()

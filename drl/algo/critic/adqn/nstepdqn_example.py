@@ -80,7 +80,7 @@ def nstepdqn_pixel_atari(game):
 
 if __name__ == '__main__':
     random_seed()
-    select_device(0)
+    select_device(-1)
     # game = 'MountainCar-v0'
     game = 'CartPole-v0'
     # game = 'BreakoutNoFrameskip-v4'
