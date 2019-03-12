@@ -5,6 +5,7 @@ setup(
     version='',
     packages=[''],
     install_requires=[
+        'cloudpickle',
         'gym',
         'torch',
         'torchvision',
