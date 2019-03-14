@@ -1,18 +1,13 @@
 from drl.common.Normalizer import RescaleNormalizer
 
-class NStepDQNConfig:
+class Config:
     def __init__(self):
-        self.log_dir = None
         self.task_fn = None
         self.optimizer_fn = None
         self.network_fn = None
         self.discount = None
-        self.target_network_update_freq = None
-        self.exploration_steps = None
         self.logger = None
-        self.history_length = None
-        self.double_q = False
-        self.tag = 'dqn'
+        self.tag = 'a2c'
         self.state_dim = None
         self.state_shape = None
         self.action_dim = None
@@ -24,7 +19,6 @@ class NStepDQNConfig:
         self.reward_normalizer = RescaleNormalizer()
         self.max_steps = 0
         self.rollout_length = None
-        self.random_action_prob = None
         self.__eval_env = None
         self.log_interval = int(1e3)
         self.save_interval = 0

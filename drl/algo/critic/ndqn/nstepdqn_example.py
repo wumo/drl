@@ -1,5 +1,5 @@
-from drl.algo.critic.adqn.NStepDQNConfig import NStepDQNConfig
-from drl.algo.critic.adqn.NStepDQNAgent import NStepDQNAgent
+from drl.algo.critic.ndqn.NStepDQNConfig import NStepDQNConfig
+from drl.algo.critic.ndqn.NStepDQNAgent import NStepDQNAgent
 from drl.environment.Task import Task
 from torch.optim import RMSprop
 from drl.network.network_heads import VanillaNet, NatureConvBody, DQNBody, DuelingNet
@@ -9,8 +9,6 @@ from drl.common.Schedule import LinearSchedule
 from drl.common.run_utils import run_steps
 from drl.util.logger import get_logger
 from drl.util.torch_utils import random_seed, select_device
-from drl.common.DeviceSetting import DEVICE
-import torch
 
 def nstepdqn_cart_pole(game):
     config = NStepDQNConfig()

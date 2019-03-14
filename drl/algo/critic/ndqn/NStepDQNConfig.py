@@ -1,9 +1,8 @@
 from drl.common.Config import Config
 
-class DQNConfig(Config):
+class NStepDQNConfig(Config):
     def __init__(self):
         super().__init__()
-        self.replay_fn = None
         self.target_network_update_freq = None
         self.exploration_steps = None
         self.history_length = None

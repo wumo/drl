@@ -20,14 +20,6 @@ class NStepDQNAgent(BaseAgent):
         self.states = self.task.reset()
         self.online_rewards = np.zeros(config.num_workers)
     
-    def eval_step(self, state):
-        self.config.state_normalizer.set_read_only()
-        state = self.config.state_normalizer(state)
-        q = self.network(state)
-        action = np.argmax(toNumpy(q))
-        self.config.state_normalizer.unset_read_only()
-        return action
-    
     def step(self):
         config = self.config
         

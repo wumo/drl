@@ -158,11 +158,7 @@ class GaussianActorCriticNet(nn.Module, BaseNet):
             action = dist.sample()
         log_prob = dist.log_prob(action).sum(-1).unsqueeze(-1)
         entropy = dist.entropy().sum(-1).unsqueeze(-1)
-        return {'a': action,
-                'log_pi_a': log_prob,
-                'ent': entropy,
-                'mean': mean,
-                'v': v}
+        return action, log_prob, entropy, v
 
 class CategoricalActorCriticNet(nn.Module, BaseNet):
     def __init__(self,
