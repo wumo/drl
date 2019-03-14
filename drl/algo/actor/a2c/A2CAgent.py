@@ -18,7 +18,7 @@ class A2CStorageBuffer(StorageBuffer):
 
 class A2CAgent(BaseAgent):
     def __init__(self, config):
-        BaseAgent.__init__(self, config)
+        super().__init__(config)
         self.config = config
         
         self.network = config.network_fn()

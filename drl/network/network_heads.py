@@ -30,7 +30,7 @@ class DuelingNet(nn.Module, BaseNet):
         self.body = body
         self.to(DEVICE)
     
-    def forward(self, x, to_numpy=False):
+    def forward(self, x):
         phi = self.body(toTensor(x))
         value = self.fc_value(phi)
         advantange = self.fc_advantage(phi)

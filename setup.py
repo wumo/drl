@@ -16,7 +16,8 @@ setup(
         'atari-py',
         'tensorboardX',
         'matplotlib',
-        'pandas'
+        'pandas',
+        'opencv-python'
     ],
     url='',
     license='',

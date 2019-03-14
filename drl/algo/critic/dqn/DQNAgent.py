@@ -7,7 +7,7 @@ from torch.nn.utils import clip_grad_norm_
 # Human-level control through deep reinforcement (DQN)
 class DQNAgent(BaseAgent):
     def __init__(self, config):
-        BaseAgent.__init__(self, config)
+        super().__init__(config)
         self.config = config
         
         self.reply = config.replay_fn()

@@ -73,7 +73,7 @@ class SubProcessesVecEnv(VecEnv):
         self._assert_not_closed()
         for remote in self.remotes:
             remote.send(('reset', None))
-        return [remote.recv() for remote in self.remotes]
+        return _flatten_obs([remote.recv() for remote in self.remotes])
     
     def step_async(self, actions):
         self._assert_not_closed()
@@ -86,7 +86,7 @@ class SubProcessesVecEnv(VecEnv):
         data = [remote.recv() for remote in self.remotes]
         self.waiting = False
         obs, rews, dones, infos = zip(*data)
-        return obs, np.asarray(rews), np.asarray(dones), infos
+        return _flatten_obs(obs), np.asarray(rews), np.asarray(dones), infos
     
     def close_extras(self):
         self.closed = True
@@ -101,3 +101,13 @@ class SubProcessesVecEnv(VecEnv):
     def __del__(self):
         if not self.closed:
             self.close()
+
+def _flatten_obs(obs):
+    assert isinstance(obs, (list, tuple))
+    assert len(obs) > 0
+    
+    if isinstance(obs[0], dict):
+        keys = obs[0].keys()
+        return {k: np.stack([o[k] for o in obs]) for k in keys}
+    else:
+        return np.stack(obs)

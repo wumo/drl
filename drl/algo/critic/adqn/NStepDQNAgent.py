@@ -8,7 +8,7 @@ from torch.nn.utils import clip_grad_norm_
 # Asynchronous Methods for Deep Reinforcement Learning
 class NStepDQNAgent(BaseAgent):
     def __init__(self, config):
-        BaseAgent.__init__(self, config)
+        super().__init__(config)
         self.config = config
         
         self.network = config.network_fn()

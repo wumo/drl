@@ -8,23 +8,41 @@ from .SubProcessesVecEnv import SubProcessesVecEnv
 from drl.bench.monitor import Monitor
 from os.path import join
 from drl.util.misc import mkdir
+from drl.environment.atari_wrappers import make_atari, wrap_deepmind, TransposeImage
+from drl.environment.atari_wrappers import FrameStack
 
-def configure_env_maker(env_name, seed, rank, log_dir=None):
+def configure_env_maker(env_name, rank, log_dir=None, seed=np.random.randint(int(1e5)),
+                        episode_life=True, history_length=4):
     def maker():
         random_seed(seed)
         env = gym.make(env_name)
+        is_atari = hasattr(gym.envs, 'atari') and isinstance(
+            env.unwrapped, gym.envs.atari.atari_env.AtariEnv)
+        if is_atari:
+            env = make_atari(env_name)
         env.seed(seed + rank)
         if log_dir is not None:
             env = Monitor(env, filename=join(log_dir, str(rank)), allow_early_resets=True)
+        if is_atari:
+            env = wrap_deepmind(env,
+                                episode_life=episode_life,
+                                clip_rewards=False,
+                                frame_stack=False,
+                                scale=False)
+            obs_shape = env.observation_space.shape
+            if len(obs_shape) == 3:
+                env = TransposeImage(env)
+            env = FrameStack(env, history_length)
         return env
     
     return maker
 
 class Task:
-    def __init__(self, env_name, num_envs=1, single_process=True, log_dir=None, seed=np.random.randint(int(1e5))):
+    def __init__(self, env_name, num_envs=1, single_process=True, log_dir=None,
+                 **kwargs):
         if log_dir is not None:
             mkdir(log_dir)
-        env_makers = [configure_env_maker(env_name, seed, i, log_dir) for i in range(num_envs)]
+        env_makers = [configure_env_maker(env_name, i, log_dir, **kwargs) for i in range(num_envs)]
         Wrapper = SingleProcessVecEnv if single_process else SubProcessesVecEnv
         self.env = Wrapper(env_makers)
         self.name = env_name
