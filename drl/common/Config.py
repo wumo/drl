@@ -20,7 +20,7 @@ class Config:
         self.max_steps = 0
         self.rollout_length = None
         self.__eval_env = None
-        self.log_interval = int(1e3)
+        self.log_interval = int(2e3)
         self.save_interval = 0
         self.eval_interval = 0
         self.eval_episodes = 10
