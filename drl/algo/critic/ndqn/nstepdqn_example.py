@@ -6,11 +6,11 @@ from drl.network.network_heads import VanillaNet, NatureConvBody, DQNBody, Dueli
 from drl.network.network_bodies import FCBody
 from drl.common.Normalizer import ImageNormalizer, SignNormalizer
 from drl.common.Schedule import LinearSchedule
-from drl.common.run_utils import run_steps
 from drl.util.logger import get_logger
 from drl.util.torch_utils import random_seed, select_device
 
-def nstepdqn_cart_pole(game):
+def nstepdqn_cart_pole():
+    game = 'CartPole-v0'
     config = NStepDQNConfig()
     config.num_workers = 16
     config.task_fn = lambda: Task(game, num_envs=config.num_workers, single_process=True)
@@ -29,7 +29,7 @@ def nstepdqn_cart_pole(game):
     config.eval_interval = int(5e3)
     config.max_steps = 1e6
     config.logger = get_logger(nstepdqn_cart_pole.__name__)
-    run_steps(NStepDQNAgent(config))
+    NStepDQNAgent(config).run_steps()
 
 def nstepdqn_pixel_atari(game):
     config = NStepDQNConfig()
@@ -37,7 +37,7 @@ def nstepdqn_pixel_atari(game):
     config.history_length = 4
     config.task_fn = lambda: Task(game, num_envs=config.num_workers, single_process=False,
                                   history_length=config.history_length)
-    config.eval_env = Task(game, episode_life=False, history_length=config.history_length)
+    config.eval_env = Task(game, history_length=config.history_length)
     
     config.optimizer_fn = lambda params: RMSprop(params, lr=1e-4, alpha=0.99, eps=1e-5)
     # config.network_fn = lambda: VanillaNet(config.action_dim, NatureConvBody(in_channels=config.history_length))
@@ -52,9 +52,11 @@ def nstepdqn_pixel_atari(game):
     # config.double_q = False
     config.rollout_length = 5
     config.gradient_clip = 5
+    config.eval_interval = int(1e4)
+    config.eval_episodes = 10
     config.max_steps = int(2e7)
     config.logger = get_logger(nstepdqn_pixel_atari.__name__)
-    run_steps(NStepDQNAgent(config))
+    NStepDQNAgent(config).run_steps()
 
 if __name__ == '__main__':
     random_seed()
@@ -62,5 +64,5 @@ if __name__ == '__main__':
     # game = 'MountainCar-v0'
     # game = 'CartPole-v0'
     # game = 'BreakoutNoFrameskip-v4'
-    # nstepdqn_cart_pole('CartPole-v0')
-    nstepdqn_pixel_atari('BreakoutNoFrameskip-v4')
+    nstepdqn_cart_pole()
+    # nstepdqn_pixel_atari('BreakoutNoFrameskip-v4')

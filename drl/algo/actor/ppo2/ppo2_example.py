@@ -1,9 +1,10 @@
-from drl.algo.actor.ppo.PPOAgent import PPOAgent
-from drl.algo.actor.ppo.PPOConfig import PPOConfig
+from drl.algo.actor.ppo2.PPO2Agent import PPO2Agent
+from drl.algo.actor.ppo2.PPO2Config import PPO2Config
 from drl.environment.Task import Task
 from torch.optim import Adam, RMSprop
 from drl.network.network_heads import CategoricalActorCriticNet, GaussianActorCriticNet
 from drl.network.network_bodies import FCBody, NatureConvBody
+from drl.common.run_utils import run_steps
 from drl.common.Normalizer import ImageNormalizer, SignNormalizer
 from drl.util.logger import get_logger
 from drl.util.torch_utils import random_seed, select_device
@@ -11,7 +12,7 @@ import torch.nn.functional as F
 
 def ppo_cart_pole():
     game = 'CartPole-v0'
-    config = PPOConfig()
+    config = PPO2Config()
     config.num_workers = 5
     config.task_fn = lambda: Task(game, num_envs=config.num_workers)
     config.eval_env = Task(game)
@@ -32,10 +33,10 @@ def ppo_cart_pole():
     config.ppo_ratio_clip = 0.2
     config.log_interval = 128 * 5 * 10
     config.logger = get_logger(tag=ppo_cart_pole.__name__)
-    PPOAgent(config).run_steps()
+    run_steps(PPO2Agent(config))
 
 def ppo_pixel_atari(game):
-    config = PPOConfig()
+    config = PPO2Config()
     config.history_length = 4
     config.num_workers = 8
     config.task_fn = lambda: Task(game, num_envs=config.num_workers, single_process=False,
@@ -61,14 +62,16 @@ def ppo_pixel_atari(game):
     config.log_interval = 128 * 8
     config.max_steps = int(2e7)
     config.logger = get_logger(tag=ppo_pixel_atari.__name__)
-    PPOAgent(config).run_steps()
+    run_steps(PPO2Agent(config))
 
 def ppo_continuous(game):
-    config = PPOConfig()
+    config = PPO2Config()
     config.num_workers = 16
     config.task_fn = lambda: Task(game, num_envs=config.num_workers, single_process=False)
     config.eval_env = Task(game)
-    config.optimizer_fn = lambda params: Adam(params, 3e-4, eps=1e-5)
+    config.act_optimizer_fn = lambda params: Adam(params, 3e-4, eps=1e-5)
+    config.critic_optimizer_fn = lambda params: Adam(params, 3e-4, eps=1e-5)
+    
     config.network_fn = lambda: GaussianActorCriticNet(
         config.state_dim, config.action_dim,
         actor_body=FCBody(config.state_dim, gate=F.tanh),
@@ -88,7 +91,7 @@ def ppo_continuous(game):
     config.log_interval = 2048
     config.max_steps = int(1e6)
     config.logger = get_logger(tag=ppo_continuous.__name__)
-    PPOAgent(config).run_steps()
+    run_steps(PPO2Agent(config))
 
 if __name__ == '__main__':
     random_seed()
@@ -96,8 +99,8 @@ if __name__ == '__main__':
     # game = 'MountainCar-v0'
     # game = 'BreakoutNoFrameskip-v4'
     game = 'HalfCheetah-v2'
-    ppo_cart_pole()
+    # ppo_cart_pole()
     # ppo_pixel_atari(game)
-    # ppo_continuous(game)
+    ppo_continuous(game)
     # a2c_pixel_atari(game)
     # ppo_continuous(game)

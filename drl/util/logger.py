@@ -8,8 +8,23 @@ from tensorboardX import SummaryWriter
 import logging
 from pathlib import Path
 
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s: %(message)s')
+logging.basicConfig(format='%(asctime)s - %(levelname)s: %(message)s')
 from .misc import *
+
+def pretty_time_delta(seconds):
+    sign_string = '-' if seconds < 0 else ''
+    seconds = abs(int(seconds))
+    days, seconds = divmod(seconds, 86400)
+    hours, seconds = divmod(seconds, 3600)
+    minutes, seconds = divmod(seconds, 60)
+    if days > 0:
+        return '%s%dd%dh%dm%ds' % (sign_string, days, hours, minutes, seconds)
+    elif hours > 0:
+        return '%s%dh%dm%ds' % (sign_string, hours, minutes, seconds)
+    elif minutes > 0:
+        return '%s%dm%ds' % (sign_string, minutes, seconds)
+    else:
+        return '%s%ds' % (sign_string, seconds)
 
 def get_logger(tag=None, skip=False, level=logging.INFO):
     log_dir = str(Path.home())
@@ -18,7 +33,7 @@ def get_logger(tag=None, skip=False, level=logging.INFO):
     if tag is not None:
         mkdir(f'{log_dir}/log')
         fh = logging.FileHandler(f'{log_dir}/log/%s-%s.txt' % (tag, get_time_str()))
-        fh.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s: %(message)s'))
+        fh.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s: %(message)s'))
         fh.setLevel(level)
         logger.addHandler(fh)
     return Logger(logger, f'{log_dir}/tf_log/logger-{tag}-{get_time_str()}', skip)

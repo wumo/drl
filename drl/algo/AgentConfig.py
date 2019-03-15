@@ -1,6 +1,6 @@
 from drl.common.Normalizer import RescaleNormalizer
 
-class Config:
+class AgentConfig:
     def __init__(self):
         self.task_fn = None
         self.optimizer_fn = None

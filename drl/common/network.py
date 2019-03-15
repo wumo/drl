@@ -85,6 +85,7 @@ class GaussianActorCriticNet(ActorCriticNet):
     def __init__(self, state_dim, action_dim, shared_body=None, actor_body=None, critic_body=None):
         super(GaussianActorCriticNet, self).__init__(state_dim, action_dim, shared_body, actor_body, critic_body)
         self.std = nn.Parameter(torch.zeros(action_dim))
+        self.critic_params.append(self.std)
         self.to(DEVICE)
     
     def actor(self, obs, action=None, shared=None):

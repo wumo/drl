@@ -1,5 +1,5 @@
 from drl.algo.BaseAgent import BaseAgent
-from drl.util.torch_utils import toNumpy, range_tensor, toTensor
+from drl.util.torch_utils import toNumpy, range_tensor, toTensor, epsilon_greedy
 import numpy as np
 import torch
 from torch.nn.utils import clip_grad_norm_
@@ -25,8 +25,7 @@ class DQNAgent(BaseAgent):
     
     def eval_step(self, state):
         self.config.state_normalizer.set_read_only()
-        state = self.config.state_normalizer(state)
-        q = self.network(state)
+        q = self.network(self.config.state_normalizer(state))
         action = np.argmax(toNumpy(q))
         self.config.state_normalizer.unset_read_only()
         return action
@@ -38,12 +37,10 @@ class DQNAgent(BaseAgent):
         for _ in range(self.config.rollout_length):
             # choose according to max(Q)
             q = self.network(config.state_normalizer(self.states))
-            q = toNumpy(q)
-            action = np.random.randint(0, len(q)) \
-                if self.total_steps < config.exploration_steps or np.random.rand() < config.random_action_prob() \
-                else np.argmax(q)
+            epsilon = config.random_action_prob(config.num_workers)
+            actions = epsilon_greedy(epsilon, toNumpy(q))
             
-            next_states, rewards, dones, info = self.task.step([action])
+            next_states, rewards, dones, info = self.task.step(actions)
             state, reward, next_state, done = self.states[0], rewards[0], next_states[0], int(dones[0])
             self.states = next_states
             self.total_steps += 1
@@ -53,7 +50,7 @@ class DQNAgent(BaseAgent):
             if done:
                 self.episode_rewards.append(self.online_reward)
                 self.online_reward = 0
-            self.reply.store([state, action, reward, next_state, done])
+            self.reply.store([state, actions[0], reward, next_state, done])
         
         if self.total_steps > config.exploration_steps:
             # minibatch gradient descent

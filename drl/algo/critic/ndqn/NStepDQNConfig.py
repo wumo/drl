@@ -1,6 +1,6 @@
-from drl.common.Config import Config
+from drl.algo.AgentConfig import AgentConfig
 
-class NStepDQNConfig(Config):
+class NStepDQNConfig(AgentConfig):
     def __init__(self):
         super().__init__()
         self.target_network_update_freq = None

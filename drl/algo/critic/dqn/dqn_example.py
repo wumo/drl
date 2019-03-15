@@ -6,10 +6,8 @@ from drl.network.network_heads import VanillaNet, DuelingNet, NatureConvBody
 from drl.network.network_bodies import FCBody
 from drl.common.ReplayBuffer import ReplayBuffer
 from drl.common.Schedule import LinearSchedule
-from drl.common.run_utils import run_steps
 from drl.util.logger import get_logger
 from drl.util.torch_utils import random_seed, select_device
-from drl.util.misc import get_default_log_dir
 
 def dqn_cart_pole(game):
     config = DQNConfig()
@@ -33,7 +31,7 @@ def dqn_cart_pole(game):
     config.eval_interval = int(5e3)
     config.max_steps = 1e6
     config.logger = get_logger(dqn_cart_pole.__name__)
-    run_steps(DQNAgent(config))
+    DQNAgent(config).run_steps()
 
 def dqn_pixel_atari(game):
     config = DQNConfig()
@@ -58,7 +56,7 @@ def dqn_pixel_atari(game):
     config.gradient_clip = 5
     config.max_steps = 2e7
     config.logger = get_logger(dqn_cart_pole.__name__)
-    run_steps(DQNAgent(config))
+    DQNAgent(config).run_steps()
 
 if __name__ == '__main__':
     random_seed()

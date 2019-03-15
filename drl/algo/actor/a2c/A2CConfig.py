@@ -1,6 +1,6 @@
-from drl.common.Config import Config
+from drl.algo.AgentConfig import AgentConfig
 
-class A2CConfig(Config):
+class A2CConfig(AgentConfig):
     def __init__(self):
         super().__init__()
         self.history_length = 4

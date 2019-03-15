@@ -1,6 +1,6 @@
-from drl.common.Config import Config
+from drl.algo.AgentConfig import AgentConfig
 
-class DQNConfig(Config):
+class DQNConfig(AgentConfig):
     def __init__(self):
         super().__init__()
         self.replay_fn = None
