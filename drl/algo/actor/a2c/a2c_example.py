@@ -8,7 +8,8 @@ from drl.common.Normalizer import ImageNormalizer, SignNormalizer
 from drl.util.logger import get_logger
 from drl.util.torch_utils import random_seed, select_device
 
-def a2c_cart_pole(game):
+def a2c_cart_pole():
+    game = 'CartPole-v0'
     config = A2CConfig()
     config.num_workers = 5
     config.task_fn = lambda: Task(game, num_envs=config.num_workers)
@@ -24,7 +25,7 @@ def a2c_cart_pole(game):
     config.entropy_weight = 0.001
     config.rollout_length = 5
     config.gradient_clip = 0.5
-    config.logger = get_logger(tag=a2c_cart_pole.__name__)
+    config.logger = get_logger(tag=f'{a2c_cart_pole.__name__}-{game}')
     A2CAgent(config).run_steps()
 
 def a2c_pixel_atari(game):
@@ -49,7 +50,7 @@ def a2c_pixel_atari(game):
     config.rollout_length = 5
     config.gradient_clip = 5
     config.max_steps = int(2e7)
-    config.logger = get_logger(tag=a2c_pixel_atari.__name__)
+    config.logger = get_logger(tag=f'{a2c_pixel_atari.__name__}-{game}')
     A2CAgent(config).run_steps()
 
 def a2c_continuous(game):
@@ -69,7 +70,7 @@ def a2c_continuous(game):
     config.rollout_length = 5
     config.gradient_clip = 5
     config.max_steps = int(1e6)
-    config.logger = get_logger(tag=a2c_continuous.__name__)
+    config.logger = get_logger(tag=f'{a2c_continuous.__name__}-{game}')
     A2CAgent(config).run_steps()
 
 if __name__ == '__main__':

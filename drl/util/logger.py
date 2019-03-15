@@ -36,7 +36,7 @@ def get_logger(tag=None, skip=False, level=logging.INFO):
         fh.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s: %(message)s'))
         fh.setLevel(level)
         logger.addHandler(fh)
-    return Logger(logger, f'{log_dir}/tf_log/logger-{tag}-{get_time_str()}', skip)
+    return Logger(logger, f'{log_dir}/tf_log/{tag}-{get_time_str()}', skip)
 
 class Logger(object):
     def __init__(self, vanilla_logger, log_dir, skip=False):

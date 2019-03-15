@@ -30,7 +30,7 @@ def dqn_cart_pole():
     config.gradient_clip = 5
     config.eval_interval = int(5e3)
     config.max_steps = 1e6
-    config.logger = get_logger(dqn_cart_pole.__name__)
+    config.logger = get_logger(tag=f'{dqn_cart_pole.__name__}-{game}')
     DQNAgent(config).run_steps()
 
 def dqn_pixel_atari(game):
@@ -53,7 +53,7 @@ def dqn_pixel_atari(game):
     config.rollout_length = 4
     config.gradient_clip = 5
     config.max_steps = 2e7
-    config.logger = get_logger(dqn_cart_pole.__name__)
+    config.logger = get_logger(tag=f'{dqn_pixel_atari.__name__}-{game}')
     DQNAgent(config).run_steps()
 
 if __name__ == '__main__':
@@ -62,5 +62,5 @@ if __name__ == '__main__':
     # game = 'MountainCar-v0'
     
     game = 'BreakoutNoFrameskip-v4'
-    dqn_cart_pole()
-    # dqn_pixel_atari(game)
+    # dqn_cart_pole()
+    dqn_pixel_atari(game)

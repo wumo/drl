@@ -28,7 +28,7 @@ def nstepdqn_cart_pole():
     config.gradient_clip = 5
     config.eval_interval = int(5e3)
     config.max_steps = 1e6
-    config.logger = get_logger(nstepdqn_cart_pole.__name__)
+    config.logger = get_logger(tag=f'{nstepdqn_pixel_atari.__name__}-{game}')
     NStepDQNAgent(config).run_steps()
 
 def nstepdqn_pixel_atari(game):
@@ -36,7 +36,7 @@ def nstepdqn_pixel_atari(game):
     config.num_workers = 16
     config.task_fn = lambda: Task(game, num_envs=config.num_workers, single_process=False)
     config.eval_env = Task(game)
-
+    
     config.state_normalizer = ImageNormalizer()
     config.reward_normalizer = SignNormalizer()
     
@@ -53,10 +53,10 @@ def nstepdqn_pixel_atari(game):
     config.rollout_length = 5
     config.gradient_clip = 5
     config.max_steps = int(2e7)
-
+    
     # config.eval_interval = int(1e4)
     # config.eval_episodes = 10
-    config.logger = get_logger(nstepdqn_pixel_atari.__name__)
+    config.logger = get_logger(tag=f'{nstepdqn_pixel_atari.__name__}-{game}')
     NStepDQNAgent(config).run_steps()
 
 if __name__ == '__main__':

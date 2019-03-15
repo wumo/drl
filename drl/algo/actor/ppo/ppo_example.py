@@ -31,7 +31,7 @@ def ppo_cart_pole():
     config.mini_batch_size = 32 * 5
     config.ppo_ratio_clip = 0.2
     config.log_interval = 128 * 5 * 10
-    config.logger = get_logger(tag=ppo_cart_pole.__name__)
+    config.logger = get_logger(tag=f'{ppo_cart_pole.__name__}-{game}')
     PPOAgent(config).run_steps()
 
 def ppo_pixel_atari(game):
@@ -60,7 +60,7 @@ def ppo_pixel_atari(game):
     config.ppo_ratio_clip = 0.1
     config.log_interval = 128 * 8
     config.max_steps = int(2e7)
-    config.logger = get_logger(tag=ppo_pixel_atari.__name__)
+    config.logger = get_logger(tag=f'{ppo_pixel_atari.__name__}-{game}')
     PPOAgent(config).run_steps()
 
 def ppo_continuous(game):
@@ -87,7 +87,7 @@ def ppo_continuous(game):
     config.ppo_ratio_clip = 0.2
     config.log_interval = 2048
     config.max_steps = int(1e6)
-    config.logger = get_logger(tag=ppo_continuous.__name__)
+    config.logger = get_logger(tag=f'{ppo_continuous.__name__}-{game}')
     PPOAgent(config).run_steps()
 
 if __name__ == '__main__':
