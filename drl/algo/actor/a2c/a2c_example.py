@@ -77,7 +77,7 @@ if __name__ == '__main__':
     select_device(0)
     # game = 'MountainCar-v0'
     # game = 'CartPole-v0'
-    # game = 'BreakoutNoFrameskip-v4'
-    game = 'Reacher-v2'
-    # a2c_pixel_atari(game)
-    a2c_continuous(game)
+    game = 'BreakoutNoFrameskip-v4'
+    # game = 'Reacher-v2'
+    a2c_pixel_atari(game)
+    # a2c_continuous(game)

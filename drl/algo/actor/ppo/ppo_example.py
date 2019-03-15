@@ -37,7 +37,7 @@ def ppo_cart_pole():
 def ppo_pixel_atari(game):
     config = PPOConfig()
     config.history_length = 4
-    config.num_workers = 8
+    config.num_workers = 16
     config.task_fn = lambda: Task(game, num_envs=config.num_workers, single_process=False,
                                   history_length=config.history_length)
     config.eval_env = Task(game, episode_life=False, history_length=config.history_length)
@@ -94,10 +94,10 @@ if __name__ == '__main__':
     random_seed()
     select_device(0)
     # game = 'MountainCar-v0'
-    # game = 'BreakoutNoFrameskip-v4'
-    game = 'HalfCheetah-v2'
-    ppo_cart_pole()
-    # ppo_pixel_atari(game)
+    game = 'BreakoutNoFrameskip-v4'
+    # game = 'HalfCheetah-v2'
+    # ppo_cart_pole()
+    ppo_pixel_atari(game)
     # ppo_continuous(game)
     # a2c_pixel_atari(game)
     # ppo_continuous(game)

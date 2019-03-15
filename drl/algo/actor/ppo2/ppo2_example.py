@@ -4,7 +4,6 @@ from drl.environment.Task import Task
 from torch.optim import Adam, RMSprop
 from drl.network.network_heads import CategoricalActorCriticNet, GaussianActorCriticNet
 from drl.network.network_bodies import FCBody, NatureConvBody
-from drl.common.run_utils import run_steps
 from drl.common.Normalizer import ImageNormalizer, SignNormalizer
 from drl.util.logger import get_logger
 from drl.util.torch_utils import random_seed, select_device
@@ -33,7 +32,7 @@ def ppo_cart_pole():
     config.ppo_ratio_clip = 0.2
     config.log_interval = 128 * 5 * 10
     config.logger = get_logger(tag=ppo_cart_pole.__name__)
-    run_steps(PPO2Agent(config))
+    PPO2Agent(config).run_steps()
 
 def ppo_pixel_atari(game):
     config = PPO2Config()
@@ -62,7 +61,7 @@ def ppo_pixel_atari(game):
     config.log_interval = 128 * 8
     config.max_steps = int(2e7)
     config.logger = get_logger(tag=ppo_pixel_atari.__name__)
-    run_steps(PPO2Agent(config))
+    PPO2Agent(config).run_steps()
 
 def ppo_continuous(game):
     config = PPO2Config()
@@ -91,16 +90,15 @@ def ppo_continuous(game):
     config.log_interval = 2048
     config.max_steps = int(1e6)
     config.logger = get_logger(tag=ppo_continuous.__name__)
-    run_steps(PPO2Agent(config))
+    PPO2Agent(config).run_steps()
 
 if __name__ == '__main__':
     random_seed()
     select_device(0)
     # game = 'MountainCar-v0'
-    # game = 'BreakoutNoFrameskip-v4'
-    game = 'HalfCheetah-v2'
+    game = 'BreakoutNoFrameskip-v4'
+    # game = 'HalfCheetah-v2'
     # ppo_cart_pole()
-    # ppo_pixel_atari(game)
-    ppo_continuous(game)
-    # a2c_pixel_atari(game)
+    ppo_pixel_atari(game)
+    # ppo_continuous(game)
     # ppo_continuous(game)
