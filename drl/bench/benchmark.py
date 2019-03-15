@@ -8,9 +8,11 @@ import argparse
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--env', nargs='+', default='BreakoutNoFrameskip-v4')
+    parser.add_argument('--tag', default='bench')
     args = parser.parse_args()
+    tag = args.tag
     games = args.env
-    algos = [a2c_pixel_atari, ppo_pixel_atari,nstepdqn_pixel_atari, dqn_pixel_atari]
+    algos = [a2c_pixel_atari, ppo_pixel_atari, nstepdqn_pixel_atari, dqn_pixel_atari]
     
     print(f'games: {games}')
     print(f'algorithms: {[algo.__name__ for algo in algos]}')
@@ -19,4 +21,4 @@ if __name__ == '__main__':
     select_device(0)
     for game in games:
         for algo in algos:
-            algo(game)
+            algo(game, tag)

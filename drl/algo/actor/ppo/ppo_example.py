@@ -34,7 +34,7 @@ def ppo_cart_pole():
     config.logger = get_logger(tag=f'{ppo_cart_pole.__name__}-{game}')
     PPOAgent(config).run_steps()
 
-def ppo_pixel_atari(game):
+def ppo_pixel_atari(game, tag=""):
     config = PPOConfig()
     config.history_length = 4
     config.num_workers = 16
@@ -60,10 +60,10 @@ def ppo_pixel_atari(game):
     config.ppo_ratio_clip = 0.1
     config.log_interval = 128 * 8
     config.max_steps = int(2e7)
-    config.logger = get_logger(tag=f'{ppo_pixel_atari.__name__}-{game}')
+    config.logger = get_logger(tag=f'{tag}{ppo_pixel_atari.__name__}-{game}')
     PPOAgent(config).run_steps()
 
-def ppo_continuous(game):
+def ppo_continuous(game, tag=""):
     config = PPOConfig()
     config.num_workers = 16
     config.task_fn = lambda: Task(game, num_envs=config.num_workers, single_process=False)
@@ -87,7 +87,7 @@ def ppo_continuous(game):
     config.ppo_ratio_clip = 0.2
     config.log_interval = 2048
     config.max_steps = int(1e6)
-    config.logger = get_logger(tag=f'{ppo_continuous.__name__}-{game}')
+    config.logger = get_logger(tag=f'{tag}{ppo_continuous.__name__}-{game}')
     PPOAgent(config).run_steps()
 
 if __name__ == '__main__':
@@ -97,7 +97,7 @@ if __name__ == '__main__':
     game = 'BreakoutNoFrameskip-v4'
     # game = 'HalfCheetah-v2'
     # ppo_cart_pole()
-    ppo_pixel_atari(game)
+    ppo_pixel_atari(game,"bench-")
     # ppo_continuous(game)
     # a2c_pixel_atari(game)
     # ppo_continuous(game)

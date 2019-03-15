@@ -28,7 +28,7 @@ def a2c_cart_pole():
     config.logger = get_logger(tag=f'{a2c_cart_pole.__name__}-{game}')
     A2CAgent(config).run_steps()
 
-def a2c_pixel_atari(game):
+def a2c_pixel_atari(game, tag=""):
     config = A2CConfig()
     config.history_length = 4
     config.num_workers = 16
@@ -50,10 +50,10 @@ def a2c_pixel_atari(game):
     config.rollout_length = 5
     config.gradient_clip = 5
     config.max_steps = int(2e7)
-    config.logger = get_logger(tag=f'{a2c_pixel_atari.__name__}-{game}')
+    config.logger = get_logger(tag=f'{tag}{a2c_pixel_atari.__name__}-{game}')
     A2CAgent(config).run_steps()
 
-def a2c_continuous(game):
+def a2c_continuous(game, tag=""):
     config = A2CConfig()
     config.num_workers = 16
     config.task_fn = lambda: Task(game, num_envs=config.num_workers, single_process=True)
@@ -70,7 +70,7 @@ def a2c_continuous(game):
     config.rollout_length = 5
     config.gradient_clip = 5
     config.max_steps = int(1e6)
-    config.logger = get_logger(tag=f'{a2c_continuous.__name__}-{game}')
+    config.logger = get_logger(tag=f'{tag}{a2c_continuous.__name__}-{game}')
     A2CAgent(config).run_steps()
 
 if __name__ == '__main__':
@@ -80,5 +80,5 @@ if __name__ == '__main__':
     # game = 'CartPole-v0'
     game = 'BreakoutNoFrameskip-v4'
     # game = 'Reacher-v2'
-    a2c_pixel_atari(game)
+    a2c_pixel_atari(game,"bench")
     # a2c_continuous(game)

@@ -34,7 +34,7 @@ def ppo_cart_pole():
     config.logger = get_logger(tag=ppo_cart_pole.__name__)
     PPO2Agent(config).run_steps()
 
-def ppo_pixel_atari(game):
+def ppo_pixel_atari(game, tag=""):
     config = PPO2Config()
     config.history_length = 4
     config.num_workers = 8
@@ -63,7 +63,7 @@ def ppo_pixel_atari(game):
     config.logger = get_logger(tag=ppo_pixel_atari.__name__)
     PPO2Agent(config).run_steps()
 
-def ppo_continuous(game):
+def ppo_continuous(game, tag=""):
     config = PPO2Config()
     config.num_workers = 16
     config.task_fn = lambda: Task(game, num_envs=config.num_workers, single_process=False)

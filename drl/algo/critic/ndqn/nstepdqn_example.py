@@ -31,7 +31,7 @@ def nstepdqn_cart_pole():
     config.logger = get_logger(tag=f'{nstepdqn_pixel_atari.__name__}-{game}')
     NStepDQNAgent(config).run_steps()
 
-def nstepdqn_pixel_atari(game):
+def nstepdqn_pixel_atari(game, tag=""):
     config = NStepDQNConfig()
     config.num_workers = 16
     config.task_fn = lambda: Task(game, num_envs=config.num_workers, single_process=False)
@@ -56,7 +56,7 @@ def nstepdqn_pixel_atari(game):
     
     # config.eval_interval = int(1e4)
     # config.eval_episodes = 10
-    config.logger = get_logger(tag=f'{nstepdqn_pixel_atari.__name__}-{game}')
+    config.logger = get_logger(tag=f'{tag}{nstepdqn_pixel_atari.__name__}-{game}')
     NStepDQNAgent(config).run_steps()
 
 if __name__ == '__main__':
@@ -66,4 +66,4 @@ if __name__ == '__main__':
     # game = 'CartPole-v0'
     game = 'BreakoutNoFrameskip-v4'
     # nstepdqn_cart_pole()
-    nstepdqn_pixel_atari(game)
+    nstepdqn_pixel_atari(game, "bench-")
