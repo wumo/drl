@@ -34,11 +34,11 @@ class A2CAgent(BaseAgent):
         states = self.states
         for _ in range(config.rollout_length):
             action_tr, log_prob_tr, entropy_tr, v_tr = self.network(config.state_normalizer(states))
-            next_states, rewards, terminals, _ = self.task.step(toNumpy(action_tr))
+            next_states, rewards, terminals, infos = self.task.step(toNumpy(action_tr))
             self.online_rewards += rewards
             rewards = config.reward_normalizer(rewards)
-            for i, terminal in enumerate(terminals):
-                if terminals[i]:
+            for i, info in enumerate(infos):
+                if info['real_done']:
                     self.episode_rewards.append(self.online_rewards[i])
                     self.online_rewards[i] = 0
             storage.store_next(values=v_tr,

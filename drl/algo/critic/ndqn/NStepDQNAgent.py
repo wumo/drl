@@ -38,12 +38,12 @@ class NStepDQNAgent(BaseAgent):
             epsilon = config.random_action_prob(config.num_workers)
             actions = epsilon_greedy(epsilon, toNumpy(q))
             
-            next_states, rewards, terminals, _ = self.task.step(actions)
+            next_states, rewards, terminals, infos = self.task.step(actions)
             self.online_rewards += rewards
             
             rewards = config.reward_normalizer(rewards)
-            for i, terminal in enumerate(terminals):
-                if terminals[i]:
+            for i, info in enumerate(infos):
+                if info['real_done']:
                     self.episode_rewards.append(self.online_rewards[i])
                     self.online_rewards[i] = 0
             

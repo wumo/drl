@@ -5,11 +5,20 @@ from gym.spaces.box import Box
 from ..util.torch_utils import random_seed
 from .SingleProcessVecEnv import SingleProcessVecEnv
 from .SubProcessesVecEnv import SubProcessesVecEnv
-from drl.bench.monitor import Monitor
-from os.path import join
+# from drl.bench.monitor import Monitor
 from drl.util.misc import mkdir
 from drl.environment.atari_wrappers import make_atari, wrap_deepmind, TransposeImage
 from drl.environment.atari_wrappers import FrameStack
+
+class Monitor(gym.core.Wrapper):
+    
+    def __init__(self, env):
+        super().__init__(env)
+    
+    def step(self, action):
+        ob, rew, done, info = self.env.step(action)
+        info['real_done'] = done
+        return ob, rew, done, info
 
 def configure_env_maker(env_name, rank, log_dir=None, seed=np.random.randint(int(1e5)),
                         episode_life=True, history_length=4):
@@ -21,8 +30,9 @@ def configure_env_maker(env_name, rank, log_dir=None, seed=np.random.randint(int
         if is_atari:
             env = make_atari(env_name)
         env.seed(seed + rank)
-        if log_dir is not None:
-            env = Monitor(env, filename=join(log_dir, str(rank)), allow_early_resets=True)
+        env = Monitor(env)
+        # if log_dir is not None:
+        #     env = Monitor(env, filename=join(log_dir, str(rank)), allow_early_resets=True)
         if is_atari:
             env = wrap_deepmind(env,
                                 episode_life=episode_life,

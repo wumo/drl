@@ -30,15 +30,12 @@ def a2c_cart_pole():
 
 def a2c_pixel_atari(game, tag=""):
     config = A2CConfig()
-    config.history_length = 4
     config.num_workers = 16
-    config.task_fn = lambda: Task(game, num_envs=config.num_workers, single_process=False,
-                                  history_length=config.history_length)
-    config.eval_env = Task(game, episode_life=False, history_length=config.history_length)
+    config.task_fn = lambda: Task(game, num_envs=config.num_workers, single_process=False)
+    config.eval_env = Task(game, episode_life=False)
     
     config.optimizer_fn = lambda params: RMSprop(params, lr=1e-4, alpha=0.99, eps=1e-5)
-    config.network_fn = lambda: CategoricalActorCriticNet(
-        config.state_dim, config.action_dim, NatureConvBody(in_channels=config.history_length))
+    config.network_fn = lambda: CategoricalActorCriticNet(config.state_dim, config.action_dim, NatureConvBody())
     
     config.state_normalizer = ImageNormalizer()
     config.reward_normalizer = SignNormalizer()
@@ -80,5 +77,5 @@ if __name__ == '__main__':
     # game = 'CartPole-v0'
     game = 'BreakoutNoFrameskip-v4'
     # game = 'Reacher-v2'
-    a2c_pixel_atari(game,"bench")
+    a2c_pixel_atari(game, "bench")
     # a2c_continuous(game)

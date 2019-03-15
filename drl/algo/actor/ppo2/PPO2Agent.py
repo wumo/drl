@@ -8,7 +8,7 @@ from torch.nn.utils import clip_grad_norm_
 
 class PPO2StorageBuffer(StorageBuffer):
     def __init__(self, size):
-        StorageBuffer.__int__(self, size)
+        super().__int__(size)
         self.states = [None] * size
         self.actions = [None] * size
         self.rewards = [None] * size
@@ -25,8 +25,8 @@ class PPO2Agent(BaseAgent):
         self.config = config
         
         self.network = config.network_fn()
-        self.act_optimizer = config.act_optimizer_fn(self.network.parameters())
-        self.critic_optimizer = config.critic_optimizer_fn(self.network.parameters())
+        self.act_optimizer = config.act_optimizer_fn(self.network.actor_params + self.network.shared_params)
+        self.critic_optimizer = config.critic_optimizer_fn(self.network.critic_params + self.network.shared_params)
         
         self.task = config.task_fn()
         self.states = config.state_normalizer(self.task.reset())
@@ -39,11 +39,11 @@ class PPO2Agent(BaseAgent):
         states = self.states
         for _ in range(config.rollout_length):
             action_tr, log_prob_tr, entropy_tr, v_tr = self.network(states)
-            next_states, rewards, terminals, _ = self.task.step(toNumpy(action_tr))
+            next_states, rewards, terminals, infos = self.task.step(toNumpy(action_tr))
             self.online_rewards += rewards
             rewards = config.reward_normalizer(rewards)
-            for i, terminal in enumerate(terminals):
-                if terminals[i]:
+            for i, info in enumerate(infos):
+                if info['real_done']:
                     self.episode_rewards.append(self.online_rewards[i])
                     self.online_rewards[i] = 0
             storage.store_next(states=toTensor(states),

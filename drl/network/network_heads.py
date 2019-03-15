@@ -116,7 +116,7 @@ class ActorCriticNet(nn.Module):
         obs = toTensor(obs)
         return self.shared_body(obs)
     
-    def actor(self, obs, action, shared=None):
+    def actor(self, obs, action, shared=None) -> list:
         raise NotImplementedError
     
     def critic(self, obs, shared=None):

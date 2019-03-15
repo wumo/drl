@@ -60,7 +60,7 @@ def ppo_pixel_atari(game, tag=""):
     config.ppo_ratio_clip = 0.1
     config.log_interval = 128 * 8
     config.max_steps = int(2e7)
-    config.logger = get_logger(tag=ppo_pixel_atari.__name__)
+    config.logger = get_logger(tag=f'{tag}{ppo_pixel_atari.__name__}-{game}')
     PPO2Agent(config).run_steps()
 
 def ppo_continuous(game, tag=""):
@@ -89,7 +89,7 @@ def ppo_continuous(game, tag=""):
     config.ppo_ratio_clip = 0.2
     config.log_interval = 2048
     config.max_steps = int(1e6)
-    config.logger = get_logger(tag=ppo_continuous.__name__)
+    config.logger = get_logger(tag=f'{tag}{ppo_continuous.__name__}-{game}')
     PPO2Agent(config).run_steps()
 
 if __name__ == '__main__':
