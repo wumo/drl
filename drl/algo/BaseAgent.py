@@ -4,6 +4,7 @@ import time
 import datetime
 import os
 import psutil
+import gc
 import json
 from drl.util.logger import pretty_time_delta, pretty_memory
 from drl.util.serialization import toJson
@@ -64,6 +65,7 @@ class BaseAgent:
         N = 0
         last_log_steps = 0
         last_eval_steps = 0
+        last_gc_steps = 0
         process = psutil.Process(os.getpid())
         while True:
             if config.save_interval and (self.total_steps % config.save_interval == 0):
@@ -96,7 +98,9 @@ class BaseAgent:
             if config.eval_interval and (self.total_steps - last_eval_steps > config.eval_interval):
                 last_eval_steps = self.total_steps
                 self.eval_episodes()
-            
+            if config.gc_interval and (self.total_steps-last_gc_steps>config.gc_interval):
+                last_gc_steps=self.total_steps
+                gc.collect()
             if config.max_steps and self.total_steps >= config.max_steps:
                 break
             self.step()
