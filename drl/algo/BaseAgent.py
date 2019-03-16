@@ -85,6 +85,7 @@ class BaseAgent:
                 percent = str(mem.percent)
                 used_mem = process.memory_info().rss
                 config.logger.add_scalar("mean_rewards", mean_rewards, self.total_steps)
+                config.logger.add_scalar("used_mem", used_mem / 1024 / 1024 / 1024, self.total_steps)
                 config.logger.info(f'total steps {self.total_steps}, '
                                    f'returns {mean_rewards:.2f}'
                                    f'/{media_rewards:.2f}'
@@ -98,8 +99,8 @@ class BaseAgent:
             if config.eval_interval and (self.total_steps - last_eval_steps > config.eval_interval):
                 last_eval_steps = self.total_steps
                 self.eval_episodes()
-            if config.gc_interval and (self.total_steps-last_gc_steps>config.gc_interval):
-                last_gc_steps=self.total_steps
+            if config.gc_interval and (self.total_steps - last_gc_steps > config.gc_interval):
+                last_gc_steps = self.total_steps
                 before_gc_used_mem = process.memory_info().rss
                 gc.collect()
                 after_gc_used_mem = process.memory_info().rss

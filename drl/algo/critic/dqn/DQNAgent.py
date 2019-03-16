@@ -10,7 +10,7 @@ class DQNAgent(BaseAgent):
         super().__init__(config)
         self.config = config
         
-        self.reply = config.replay_fn()
+        self.replay = config.replay_fn()
         
         self.network = config.network_fn()
         self.target_network = config.network_fn()
@@ -21,7 +21,7 @@ class DQNAgent(BaseAgent):
         self.states = self.task.reset()
         self.online_reward = 0
         
-        self.batch_indices = range_tensor(self.reply.batch_size)
+        self.batch_indices = range_tensor(self.replay.batch_size)
     
     def eval_step(self, state):
         self.config.state_normalizer.set_read_only()
@@ -50,11 +50,11 @@ class DQNAgent(BaseAgent):
             if info['real_done']:
                 self.episode_rewards.append(self.online_reward)
                 self.online_reward = 0
-            self.reply.store([state, actions[0], reward, next_state, done])
+            self.replay.store([state, actions[0], reward, next_state, done])
         
         if self.total_steps > config.exploration_steps:
             # minibatch gradient descent
-            experiences = self.reply.sample()
+            experiences = self.replay.sample()
             states, actions, rewards, next_states, terminals = experiences
             states = config.state_normalizer(states)
             next_states = config.state_normalizer(next_states)

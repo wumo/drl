@@ -35,6 +35,8 @@ def dqn_cart_pole():
 
 def dqn_pixel_atari(game, tag=""):
     config = DQNConfig()
+    config.history_length = 4
+    
     config.task_fn = lambda: Task(game)
     config.eval_env = Task(game)
     
@@ -42,7 +44,8 @@ def dqn_pixel_atari(game, tag=""):
     # config.network_fn = lambda: VanillaNet(config.action_dim, FCBody(config.state_dim))
     config.network_fn = lambda: DuelingNet(config.action_dim, NatureConvBody())
     
-    config.replay_fn = lambda: ReplayBuffer(memory_size=int(1e6), batch_size=32)
+    config.replay_fn = lambda: ReplayBuffer(memory_size=int(1e6), batch_size=32,
+                                            stack=config.history_length)
     
     config.random_action_prob = LinearSchedule(1.0, 0.01, 1e6)
     config.discount = 0.99
@@ -54,7 +57,7 @@ def dqn_pixel_atari(game, tag=""):
     config.gradient_clip = 5
     config.max_steps = 2e7
     config.logger = get_logger(tag=f'{tag}{dqn_pixel_atari.__name__}-{game}')
-    # config.gc_interval = 1e4
+    # config.gc_interval = 1e3
     DQNAgent(config).run_steps()
 
 if __name__ == '__main__':

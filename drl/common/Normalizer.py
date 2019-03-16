@@ -18,7 +18,7 @@ class BaseNormalizer:
 
 class RescaleNormalizer(BaseNormalizer):
     def __init__(self, coef=1.0):
-        BaseNormalizer.__init__(self)
+        super().__init__()
         self.coef = coef
     
     def __call__(self, x):
@@ -27,7 +27,7 @@ class RescaleNormalizer(BaseNormalizer):
 
 class ImageNormalizer(RescaleNormalizer):
     def __init__(self):
-        RescaleNormalizer.__init__(self, 1.0 / 255)
+        super().__init__(1.0 / 255)
 
 class SignNormalizer(BaseNormalizer):
     def __call__(self, x):
