@@ -2,8 +2,10 @@ import torch
 import numpy as np
 import time
 import datetime
+import os
+import psutil
 import json
-from drl.util.logger import pretty_time_delta
+from drl.util.logger import pretty_time_delta, pretty_memory
 from drl.util.serialization import toJson
 
 class BaseAgent:
@@ -61,6 +63,7 @@ class BaseAgent:
         N = 0
         last_log_steps = 0
         last_eval_steps = 0
+        process = psutil.Process(os.getpid())
         while True:
             if config.save_interval and (self.total_steps % config.save_interval == 0):
                 self.save('data/model-%s-%s-%s.bin' % (agent_name, config.task_name, config.tag))
@@ -75,6 +78,9 @@ class BaseAgent:
                 mean_steps_per_s = (mean_steps_per_s * N + steps_per_s) / (N + 1)
                 N += 1
                 ETA = (config.max_steps - self.total_steps) / mean_steps_per_s
+                mem = psutil.virtual_memory()
+                percent=str(mem.percent)
+                used_mem = process.memory_info().rss
                 config.logger.add_scalar("mean_rewards", mean_rewards, self.total_steps)
                 config.logger.info(f'total steps {self.total_steps}, '
                                    f'returns {mean_rewards:.2f}'
@@ -83,7 +89,8 @@ class BaseAgent:
                                    f'/{max_rewards:.2f} '
                                    f'(mean/median/min/max), '
                                    f'{steps_per_s:.0f} steps/s, '
-                                   f'ETA: {pretty_time_delta(ETA)}')
+                                   f'ETA: {pretty_time_delta(ETA)}, '
+                                   f'mem:{pretty_memory(used_mem)}({percent}%)')
                 t0 = time.time()
             if config.eval_interval and (self.total_steps - last_eval_steps > config.eval_interval):
                 last_eval_steps = self.total_steps

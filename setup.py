@@ -17,7 +17,8 @@ setup(
         'tensorboardX',
         'matplotlib',
         'pandas',
-        'opencv-python'
+        'opencv-python',
+        'psutil'
     ],
     url='',
     license='',

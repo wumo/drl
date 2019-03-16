@@ -11,6 +11,16 @@ from pathlib import Path
 logging.basicConfig(format='%(asctime)s - %(levelname)s: %(message)s')
 from .misc import *
 
+def pretty_memory(mem):
+    if mem < 1024:
+        return f'{mem}B'
+    elif mem / 1024 < 1024:
+        return f'{mem / 1024:.2f}KB'
+    elif mem / 1024 / 1024 < 1024:
+        return f'{mem / 1024 / 1024:.2f}MB'
+    else:
+        return f'{mem / 1024 / 1024 / 1024:.2f}GB'
+
 def pretty_time_delta(seconds):
     sign_string = '-' if seconds < 0 else ''
     seconds = abs(int(seconds))

@@ -7,18 +7,21 @@ import argparse
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
+    parser.add_argument('--algo', nargs='+',
+                        default=['a2c_pixel_atari', 'ppo_pixel_atari', 'nstepdqn_pixel_atari', 'dqn_pixel_atari'])
     parser.add_argument('--env', nargs='+', default='BreakoutNoFrameskip-v4')
     parser.add_argument('--tag', default='bench')
     args = parser.parse_args()
     tag = args.tag
     games = args.env
-    algos = [a2c_pixel_atari, ppo_pixel_atari, nstepdqn_pixel_atari, dqn_pixel_atari]
+    algos = args.algo
     
     print(f'games: {games}')
-    print(f'algorithms: {[algo.__name__ for algo in algos]}')
+    print(f'algorithms: {[algo for algo in algos]}')
     
     random_seed()
     select_device(0)
     for game in games:
         for algo in algos:
+            algo = globals()[algo]
             algo(game, tag)
