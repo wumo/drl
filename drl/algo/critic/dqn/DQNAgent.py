@@ -78,8 +78,6 @@ class DQNAgent(BaseAgent):
             loss.backward()
             clip_grad_norm_(self.network.parameters(), config.gradient_clip)
             self.optimizer.step()
-            del states
-            del next_states
         
         if self.total_steps / config.rollout_length % config.target_network_update_freq == 0:
             self.target_network.load_state_dict(self.network.state_dict())
