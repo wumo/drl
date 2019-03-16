@@ -100,7 +100,11 @@ class BaseAgent:
                 self.eval_episodes()
             if config.gc_interval and (self.total_steps-last_gc_steps>config.gc_interval):
                 last_gc_steps=self.total_steps
+                before_gc_used_mem = process.memory_info().rss
                 gc.collect()
+                after_gc_used_mem = process.memory_info().rss
+                config.logger.info(f'gc: before={pretty_memory(before_gc_used_mem)}; '
+                                   f'after={pretty_memory(after_gc_used_mem)}')
             if config.max_steps and self.total_steps >= config.max_steps:
                 break
             self.step()
