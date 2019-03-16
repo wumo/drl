@@ -14,10 +14,10 @@ class Monitor(gym.core.Wrapper):
     
     def __init__(self, env):
         super().__init__(env)
-
+    
     def reset(self, **kwargs):
-        return super().reset(**kwargs)
-
+        return self.env.reset(**kwargs)
+    
     def step(self, action):
         ob, rew, done, info = self.env.step(action)
         info['real_done'] = done
