@@ -51,7 +51,8 @@ class BaseAgent:
         raise NotImplementedError
     
     def close(self):
-        self.task.close()
+        if self.task is not None:
+            self.task.close()
     
     def run_steps(self):
         config = self.config
@@ -79,7 +80,7 @@ class BaseAgent:
                 N += 1
                 ETA = (config.max_steps - self.total_steps) / mean_steps_per_s
                 mem = psutil.virtual_memory()
-                percent=str(mem.percent)
+                percent = str(mem.percent)
                 used_mem = process.memory_info().rss
                 config.logger.add_scalar("mean_rewards", mean_rewards, self.total_steps)
                 config.logger.info(f'total steps {self.total_steps}, '
@@ -99,3 +100,5 @@ class BaseAgent:
             if config.max_steps and self.total_steps >= config.max_steps:
                 break
             self.step()
+        config.eval_env.close()
+        self.close()
