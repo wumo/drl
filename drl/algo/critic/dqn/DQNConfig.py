@@ -10,3 +10,4 @@ class DQNConfig(AgentConfig):
         self.double_q = False
         self.tag = 'dqn'
         self.random_action_prob = None
+        

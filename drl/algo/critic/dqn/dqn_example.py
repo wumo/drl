@@ -19,7 +19,7 @@ def dqn_cart_pole():
     config.network_fn = lambda: VanillaNet(config.action_dim, FCBody(config.state_dim))
     # config.network_fn = lambda: DuelingNet(config.action_dim, FCBody(config.state_dim))
     
-    config.replay_fn = lambda: ReplayBuffer(memory_size=int(1e4), batch_size=10)
+    config.replay_fn = lambda: ReplayBuffer(config.eval_env, memory_size=int(1e4), batch_size=10)
     
     config.random_action_prob = LinearSchedule(1.0, 0.1, 1e4)
     config.discount = 0.99
@@ -44,7 +44,7 @@ def dqn_pixel_atari(game, tag=""):
     # config.network_fn = lambda: VanillaNet(config.action_dim, FCBody(config.state_dim))
     config.network_fn = lambda: DuelingNet(config.action_dim, NatureConvBody())
     
-    config.replay_fn = lambda: ReplayBuffer(memory_size=int(1e6), batch_size=32,
+    config.replay_fn = lambda: ReplayBuffer(config.eval_env, memory_size=int(1e6), batch_size=32,
                                             stack=config.history_length)
     
     config.random_action_prob = LinearSchedule(1.0, 0.01, 1e6)
