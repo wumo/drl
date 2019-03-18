@@ -53,7 +53,8 @@ class ReplayBuffer:
             sampled_states = self.states[sampled_indices]
             sampled_next_states = self.next_states[sampled_indices]
         else:
-            zero_indice = self.stack - 1 if self.size < self.memory_size else self.state_ptr + self.stack - 1
+            zero_indice = self.stack - 1 if self.size < self.memory_size \
+                else (self.state_ptr + self.stack - 1) % (self.memory_size + self.stack - 1)
             
             def stack(states):
                 sampled_states = np.empty(combined_shape(batch_size, (self.stack,) + self.state_shape),
