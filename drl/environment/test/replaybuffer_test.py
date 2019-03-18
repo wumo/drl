@@ -44,7 +44,7 @@ if __name__ == '__main__':
     
     state = env.reset()
     while running:
-        clock.tick(FPS)
+        # clock.tick(FPS)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -54,6 +54,9 @@ if __name__ == '__main__':
         next_state, reward, done, info = env.step(action)
         if done: next_state = env.reset()
         replay.store([state, action, reward, next_state, done])
+        if replay.size < replay.memory_size:
+            for _ in range(replay.memory_size):
+                replay.store([state, action, reward, next_state, done])
         state = next_state
         print(replay.size)
         screen.fill((255, 255, 255))
