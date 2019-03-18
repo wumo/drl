@@ -139,17 +139,17 @@ class WarpFrame(gym.ObservationWrapper):
         self.grayscale = grayscale
         if self.grayscale:
             self.observation_space = spaces.Box(low=0, high=255,
-                                                shape=(self.height, self.width, 1), dtype=np.uint8)
+                                                shape=(1, self.width, self.height,), dtype=np.uint8)
         else:
             self.observation_space = spaces.Box(low=0, high=255,
-                                                shape=(self.height, self.width, 3), dtype=np.uint8)
+                                                shape=(3, self.width, self.height,), dtype=np.uint8)
     
     def observation(self, frame):
         if self.grayscale:
             frame = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
         frame = cv2.resize(frame, (self.width, self.height), interpolation=cv2.INTER_AREA)
         if self.grayscale:
-            frame = np.expand_dims(frame, -1)
+            frame = np.expand_dims(frame, axis=0)
         return frame
 
 class FrameStack(gym.Wrapper):

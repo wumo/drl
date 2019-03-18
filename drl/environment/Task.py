@@ -43,8 +43,8 @@ def configure_env_maker(env_name, rank, log_dir=None, seed=np.random.randint(int
                                 frame_stack=False,
                                 scale=False)
             obs_shape = env.observation_space.shape
-            if len(obs_shape) == 3:
-                env = TransposeImage(env)
+            # if len(obs_shape) == 3:
+            #     env = TransposeImage(env)
             env = FrameStack(env, history_length)
         return env
     

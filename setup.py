@@ -18,7 +18,8 @@ setup(
         'matplotlib',
         'pandas',
         'opencv-python',
-        'psutil'
+        'psutil',
+        'pygame'
     ],
     url='',
     license='',

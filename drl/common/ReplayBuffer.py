@@ -53,7 +53,7 @@ class ReplayBuffer:
             sampled_states = self.states[sampled_indices]
             sampled_next_states = self.next_states[sampled_indices]
         else:
-            zero_indice = self.stack - 1 if self.size < self.size else self.state_ptr + self.stack - 1
+            zero_indice = self.stack - 1 if self.size < self.memory_size else self.state_ptr + self.stack - 1
             
             def stack(states):
                 sampled_states = np.empty(combined_shape(batch_size, (self.stack,) + self.state_shape),
@@ -75,24 +75,3 @@ class ReplayBuffer:
                 sampled_rewards,
                 sampled_next_states,
                 sampled_dones]
-    
-    # def store(self, state, action, reward, next_state, terminal):
-    #     if self.stack > 1:
-    #         state = np.expand_dims(state[-1], axis=0)
-    #         next_state = np.expand_dims(state[-1], axis=0)
-    #     self.data[self.pos] = [state, action, reward, next_state, terminal]
-    #     self.pos = (self.pos + 1) % self.memory_size
-    #     self.size = min(self.size + 1, self.memory_size)
-    #
-    # def store_batch(self, experiences):
-    #     for experience in experiences:
-    #         self.store(experience)
-    #
-    # def sample(self, batch_size=None):
-    #     if self.size == 0: return None
-    #     if batch_size is None: batch_size = self.batch_size
-    #
-    #     sampled_indices = np.random.randint(0, self.size, size=batch_size)
-    #     sampled_data = [self.data[ind] for ind in sampled_indices]
-    #     batch_data = list(map(lambda x: np.asarray(x), zip(*sampled_data)))
-    #     return batch_data
