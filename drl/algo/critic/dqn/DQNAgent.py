@@ -21,7 +21,7 @@ class DQNAgent(BaseAgent):
         self.states = self.task.reset()
         self.online_reward = 0
         
-        self.batch_indices = range_tensor(self.replay.batch_size)
+        self.batch_indices = range_tensor(self.config.batch_size)
     
     def step(self):
         config = self.config
