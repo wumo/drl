@@ -20,7 +20,6 @@ def ppo_cart_pole():
     config.network_fn = lambda: CategoricalActorCriticNet(
         config.state_dim, config.action_dim, FCBody(config.state_dim))
     
-    config.max_steps = 3e5
     config.discount = 0.99
     config.use_gae = True
     config.gae_tau = 0.95
@@ -30,7 +29,7 @@ def ppo_cart_pole():
     config.optimization_epochs = 10
     config.mini_batch_size = 32 * 5
     config.ppo_ratio_clip = 0.2
-    # config.log_interval = 128 * 5 * 10
+    config.max_steps = 1e6
     PPOAgent(config).run_steps(tag=f'{ppo_cart_pole.__name__}-{game}')
 
 def ppo_pixel_atari(game, tag=""):

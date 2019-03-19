@@ -12,7 +12,7 @@ def a2c_cart_pole():
     game = 'CartPole-v0'
     config = A2CConfig()
     config.num_workers = 16
-    config.task_fn = lambda: Task(game, num_envs=config.num_workers,single_process=True)
+    config.task_fn = lambda: Task(game, num_envs=config.num_workers, single_process=True)
     config.eval_env = Task(game)
     
     config.optimizer_fn = lambda params: Adam(params, lr=1e-3)
@@ -25,7 +25,7 @@ def a2c_cart_pole():
     config.entropy_weight = 0.01
     config.rollout_length = 5
     config.gradient_clip = 0.5
-    config.max_steps=5e5
+    config.max_steps = 1e6
     A2CAgent(config).run_steps(tag=f'{a2c_cart_pole.__name__}-{game}')
 
 def a2c_pixel_atari(game, tag=""):

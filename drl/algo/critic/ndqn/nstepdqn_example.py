@@ -26,7 +26,6 @@ def nstepdqn_cart_pole():
     config.double_q = True
     config.rollout_length = 1
     config.gradient_clip = 5
-    # config.eval_interval = int(5e3)
     config.max_steps = 1e6
     NStepDQNAgent(config).run_steps(tag=f'{nstepdqn_pixel_atari.__name__}-{game}')
 

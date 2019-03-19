@@ -1,11 +1,11 @@
 from drl.algo.BaseAgent import BaseAgent
-from drl.util.torch_utils import toNumpy, range_tensor, toTensor, epsilon_greedy
+from drl.util.torch_utils import toNumpy, range_tensor, toTensor, epsilon_greedy, huber_loss
 import numpy as np
 import torch
 from torch.nn.utils import clip_grad_norm_
 
 # Human-level control through deep reinforcement (DQN)
-class CategoricalDQNAgent(BaseAgent):
+class QuantileRegressionDQNAgent(BaseAgent):
     def __init__(self, config):
         super().__init__(config)
         
@@ -21,9 +21,9 @@ class CategoricalDQNAgent(BaseAgent):
         
         self.batch_indices = range_tensor(self.config.batch_size)
         
-        self.atoms = toTensor(np.linspace(config.categorical_v_min, config.categorical_v_max,
-                                          config.categorical_n_atoms))
-        self.delta_atom = (config.categorical_v_max - config.categorical_v_min) / float(config.categorical_n_atoms - 1)
+        self.quantile_weight = 1.0 / self.config.num_quantiles
+        self.cumulative_density = toTensor(
+            (2 * np.arange(self.config.num_quantiles) + 1) / (2.0 * self.config.num_quantiles)).view(1, -1)
     
     def step(self):
         config = self.config
@@ -31,8 +31,7 @@ class CategoricalDQNAgent(BaseAgent):
         # rollout
         for _ in range(self.config.rollout_length):
             # choose according to max(Q)
-            probs, _ = self.network(config.state_normalizer(self.states))
-            q = (probs * self.atoms).sum(-1)
+            q = self.network(config.state_normalizer(self.states)).mean(-1)
             epsilon = config.random_action_prob(config.num_workers)
             actions = epsilon_greedy(epsilon, toNumpy(q))
             
@@ -51,34 +50,24 @@ class CategoricalDQNAgent(BaseAgent):
             states = config.state_normalizer(states)
             next_states = config.state_normalizer(next_states)
             
-            prob_next, _ = self.target_network(next_states)
-            prob_next = prob_next.detach()
-            q_next = (prob_next * self.atoms).sum(-1)
-            a_next = torch.argmax(q_next, dim=-1)
-            prob_next = prob_next[self.batch_indices, a_next, :]
+            quantiles_next = self.target_network(next_states).detach()
+            a_next = torch.argmax(quantiles_next.sum(-1), dim=-1)
+            quantiles_next = quantiles_next[self.batch_indices, a_next, :]
             
             rewards = toTensor(rewards).unsqueeze(-1)
             terminals = toTensor(terminals).unsqueeze(-1)
-            atoms_next = rewards + self.config.discount * (1 - terminals) * self.atoms.view(1, -1)
+            quantiles_next = rewards + self.config.discount * (1 - terminals) * quantiles_next
             
-            atoms_next.clamp_(self.config.categorical_v_min, self.config.categorical_v_max)
-            b = (atoms_next - self.config.categorical_v_min) / self.delta_atom
-            l = b.floor()
-            u = b.ceil()
-            d_m_l = (u + (l == u).float() - b) * prob_next
-            d_m_u = (b - l) * prob_next
-            target_prob = toTensor(np.zeros(prob_next.size()))
-            for i in range(target_prob.size(0)):
-                target_prob[i].index_add_(0, l[i].long(), d_m_l[i])
-                target_prob[i].index_add_(0, u[i].long(), d_m_u[i])
-            
-            _, log_prob = self.network(states)
+            quantiles = self.network(states)
             actions = toTensor(actions).long()
-            log_prob = log_prob[self.batch_indices, actions, :]
-            loss = -(target_prob * log_prob).sum(-1).mean()
+            quantiles = quantiles[self.batch_indices, actions, :]
+            
+            quantiles_next = quantiles_next.t().unsqueeze(-1)
+            diff = quantiles_next - quantiles
+            loss = huber_loss(diff) * (self.cumulative_density - (diff.detach() < 0).float()).abs()
             
             self.optimizer.zero_grad()
-            loss.backward()
+            loss.mean(0).mean(1).sum().backward()
             clip_grad_norm_(self.network.parameters(), self.config.gradient_clip)
             self.optimizer.step()
         
