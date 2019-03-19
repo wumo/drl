@@ -7,7 +7,6 @@ from drl.network.network_bodies import FCBody
 from drl.common.ReplayBuffer import ReplayBuffer
 from drl.common.Schedule import LinearSchedule
 from drl.common.Normalizer import ImageNormalizer, SignNormalizer
-from drl.util.logger import get_logger
 from drl.util.torch_utils import random_seed, select_device
 
 def dqn_cart_pole():
@@ -31,8 +30,7 @@ def dqn_cart_pole():
     config.rollout_length = 4
     config.gradient_clip = 5
     config.max_steps = 1e6
-    config.logger = get_logger(tag=f'{dqn_cart_pole.__name__}-{game}')
-    DQNAgent(config).run_steps()
+    DQNAgent(config).run_steps(tag=f'{dqn_cart_pole.__name__}-{game}')
 
 def dqn_pixel_atari(game, tag=""):
     config = DQNConfig()
@@ -60,8 +58,7 @@ def dqn_pixel_atari(game, tag=""):
     config.rollout_length = 4
     config.gradient_clip = 5
     config.max_steps = 2e7
-    config.logger = get_logger(tag=f'{tag}{dqn_pixel_atari.__name__}-{game}')
-    DQNAgent(config).run_steps()
+    DQNAgent(config).run_steps(tag=f'{tag}{dqn_pixel_atari.__name__}-{game}')
 
 if __name__ == '__main__':
     random_seed()
@@ -69,5 +66,5 @@ if __name__ == '__main__':
     # game = 'MountainCar-v0'
     
     game = 'BreakoutNoFrameskip-v4'
-    # dqn_cart_pole()
-    dqn_pixel_atari(game, "bench-")
+    dqn_cart_pole()
+    # dqn_pixel_atari(game, "bench-")

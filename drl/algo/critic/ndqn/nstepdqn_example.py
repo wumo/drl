@@ -26,10 +26,9 @@ def nstepdqn_cart_pole():
     config.double_q = True
     config.rollout_length = 1
     config.gradient_clip = 5
-    config.eval_interval = int(5e3)
+    # config.eval_interval = int(5e3)
     config.max_steps = 1e6
-    config.logger = get_logger(tag=f'{nstepdqn_pixel_atari.__name__}-{game}')
-    NStepDQNAgent(config).run_steps()
+    NStepDQNAgent(config).run_steps(tag=f'{nstepdqn_pixel_atari.__name__}-{game}')
 
 def nstepdqn_pixel_atari(game, tag=""):
     config = NStepDQNConfig()
@@ -56,8 +55,7 @@ def nstepdqn_pixel_atari(game, tag=""):
     
     # config.eval_interval = int(1e4)
     # config.eval_episodes = 10
-    config.logger = get_logger(tag=f'{tag}{nstepdqn_pixel_atari.__name__}-{game}')
-    NStepDQNAgent(config).run_steps()
+    NStepDQNAgent(config).run_steps(tag=f'{tag}{nstepdqn_pixel_atari.__name__}-{game}')
 
 if __name__ == '__main__':
     random_seed()
@@ -65,5 +63,5 @@ if __name__ == '__main__':
     # game = 'MountainCar-v0'
     # game = 'CartPole-v0'
     game = 'BreakoutNoFrameskip-v4'
-    # nstepdqn_cart_pole()
-    nstepdqn_pixel_atari(game, "bench-")
+    nstepdqn_cart_pole()
+    # nstepdqn_pixel_atari(game, "bench-")

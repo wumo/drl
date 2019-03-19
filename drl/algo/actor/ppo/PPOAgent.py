@@ -19,7 +19,6 @@ class PPOStorageBuffer(StorageBuffer):
         self.advantages = [None] * size
         self.returns = [None] * size
 
-
 # Proximal Policy Optimization Algorithms, Schulman et al. 2017
 class PPOAgent(BaseAgent):
     def __init__(self, config):
@@ -31,8 +30,6 @@ class PPOAgent(BaseAgent):
         
         self.task = config.task_fn()
         self.states = config.state_normalizer(self.task.reset())
-        
-        self.online_rewards = np.zeros(config.num_workers)
     
     def step(self):
         config = self.config
@@ -41,12 +38,7 @@ class PPOAgent(BaseAgent):
         for _ in range(config.rollout_length):
             action_tr, log_prob_tr, entropy_tr, v_tr = self.network(states)
             next_states, rewards, terminals, infos = self.task.step(toNumpy(action_tr))
-            self.online_rewards += rewards
             rewards = config.reward_normalizer(rewards)
-            for i, info in enumerate(infos):
-                if info['real_done']:
-                    self.episode_rewards.append(self.online_rewards[i])
-                    self.online_rewards[i] = 0
             storage.store_next(states=toTensor(states),
                                actions=action_tr,
                                values=v_tr,

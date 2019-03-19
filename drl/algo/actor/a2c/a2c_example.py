@@ -11,8 +11,8 @@ from drl.util.torch_utils import random_seed, select_device
 def a2c_cart_pole():
     game = 'CartPole-v0'
     config = A2CConfig()
-    config.num_workers = 5
-    config.task_fn = lambda: Task(game, num_envs=config.num_workers)
+    config.num_workers = 16
+    config.task_fn = lambda: Task(game, num_envs=config.num_workers,single_process=True)
     config.eval_env = Task(game)
     
     config.optimizer_fn = lambda params: Adam(params, lr=1e-3)
@@ -22,11 +22,11 @@ def a2c_cart_pole():
     config.discount = 0.99
     config.use_gae = True
     config.gae_tau = 0.95
-    config.entropy_weight = 0.001
+    config.entropy_weight = 0.01
     config.rollout_length = 5
     config.gradient_clip = 0.5
-    config.logger = get_logger(tag=f'{a2c_cart_pole.__name__}-{game}')
-    A2CAgent(config).run_steps()
+    config.max_steps=5e5
+    A2CAgent(config).run_steps(tag=f'{a2c_cart_pole.__name__}-{game}')
 
 def a2c_pixel_atari(game, tag=""):
     config = A2CConfig()
@@ -47,8 +47,7 @@ def a2c_pixel_atari(game, tag=""):
     config.rollout_length = 5
     config.gradient_clip = 5
     config.max_steps = int(2e7)
-    config.logger = get_logger(tag=f'{tag}{a2c_pixel_atari.__name__}-{game}')
-    A2CAgent(config).run_steps()
+    A2CAgent(config).run_steps(tag=f'{tag}{a2c_pixel_atari.__name__}-{game}')
 
 def a2c_continuous(game, tag=""):
     config = A2CConfig()
@@ -67,8 +66,7 @@ def a2c_continuous(game, tag=""):
     config.rollout_length = 5
     config.gradient_clip = 5
     config.max_steps = int(1e6)
-    config.logger = get_logger(tag=f'{tag}{a2c_continuous.__name__}-{game}')
-    A2CAgent(config).run_steps()
+    A2CAgent(config).run_steps(tag=f'{tag}{a2c_continuous.__name__}-{game}')
 
 if __name__ == '__main__':
     random_seed()
@@ -76,6 +74,7 @@ if __name__ == '__main__':
     # game = 'MountainCar-v0'
     # game = 'CartPole-v0'
     game = 'BreakoutNoFrameskip-v4'
+    a2c_cart_pole()
     # game = 'Reacher-v2'
-    a2c_pixel_atari(game, "bench")
+    # a2c_pixel_atari(game, "bench")
     # a2c_continuous(game)

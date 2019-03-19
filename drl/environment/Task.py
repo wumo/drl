@@ -21,9 +21,10 @@ class Monitor(gym.core.Wrapper):
     def step(self, action):
         ob, rew, done, info = self.env.step(action)
         info['real_done'] = done
+        info['real_reward'] = rew
         return ob, rew, done, info
 
-def configure_env_maker(env_name, rank, log_dir=None, seed=np.random.randint(int(1e5)),
+def configure_env_maker(env_name, rank, seed=np.random.randint(int(1e5)),
                         episode_life=True, history_length=4):
     def maker():
         random_seed(seed)
@@ -41,11 +42,8 @@ def configure_env_maker(env_name, rank, log_dir=None, seed=np.random.randint(int
     return maker
 
 class Task:
-    def __init__(self, env_name, num_envs=1, single_process=True, log_dir=None,
-                 **kwargs):
-        if log_dir is not None:
-            mkdir(log_dir)
-        env_makers = [configure_env_maker(env_name, i, log_dir, **kwargs) for i in range(num_envs)]
+    def __init__(self, env_name, num_envs=1, single_process=True, **kwargs):
+        env_makers = [configure_env_maker(env_name, i, **kwargs) for i in range(num_envs)]
         Wrapper = SingleProcessVecEnv if single_process else SubProcessesVecEnv
         self.env = Wrapper(env_makers)
         self.name = env_name
@@ -61,6 +59,9 @@ class Task:
             self.action_dim = self.action_space.shape[0]
         else:
             assert 'unknown action space'
+        
+        self.online_rewards = np.zeros(num_envs)
+        self.episode_rewards = []
     
     def reset(self):
         return self.env.reset()
@@ -71,4 +72,16 @@ class Task:
     def step(self, actions):
         if isinstance(self.action_space, Box):
             actions = np.clip(actions, self.action_space.low, self.action_space.high)
-        return self.env.step(actions)
+        next_states, rewards, dones, infos = self.env.step(actions)
+        
+        for i, info in enumerate(infos):
+            self.online_rewards[i] += info['real_reward']
+            if info['real_done']:
+                self.episode_rewards.append(self.online_rewards[i])
+                self.online_rewards[i] = 0
+        return next_states, rewards, dones, infos
+    
+    def pop_episode_rewards(self):
+        tmp = self.episode_rewards
+        self.episode_rewards = []
+        return tmp

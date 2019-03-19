@@ -1,4 +1,5 @@
 from drl.common.Normalizer import RescaleNormalizer
+from drl.util.logger import get_logger
 
 class AgentConfig:
     def __init__(self):
@@ -6,8 +7,7 @@ class AgentConfig:
         self.optimizer_fn = None
         self.network_fn = None
         self.discount = None
-        self.logger = None
-        self.tag = 'a2c'
+        self.tag = None
         self.state_dim = None
         self.action_dim = None
         self.task_name = None

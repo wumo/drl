@@ -19,7 +19,6 @@ class DQNAgent(BaseAgent):
         
         self.task = config.task_fn()
         self.states = self.task.reset()
-        self.online_reward = 0
         
         self.batch_indices = range_tensor(self.config.batch_size)
     
@@ -37,12 +36,8 @@ class DQNAgent(BaseAgent):
             state, reward, next_state, done, info = self.states[0], rewards[0], next_states[0], int(dones[0]), infos[0]
             self.states = next_states
             self.total_steps += 1
-            self.online_reward += reward
             
             reward = config.reward_normalizer(reward)
-            if info['real_done']:
-                self.episode_rewards.append(self.online_reward)
-                self.online_reward = 0
             self.replay.store([state, actions[0], reward, next_state, done])
         
         if self.total_steps > config.exploration_steps:
