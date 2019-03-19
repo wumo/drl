@@ -133,8 +133,8 @@ class DeterministicActorCriticNet(ActorCriticNet):
                  actor_body=None,
                  critic_body=None):
         super().__init__(state_dim, action_dim, shared_body, actor_body, critic_body)
-        self.actor_opt = actor_opt_fn(self.actor_params + self.network.shared_params)
-        self.critic_opt = critic_opt_fn(self.critic_params + self.network.shared_params)
+        self.actor_opt = actor_opt_fn(self.actor_params + self.shared_params)
+        self.critic_opt = critic_opt_fn(self.critic_params + self.shared_params)
         self.to(DEVICE)
     
     def forward(self, obs):
@@ -142,15 +142,11 @@ class DeterministicActorCriticNet(ActorCriticNet):
         action = self.actor(phi)
         return action
     
-    def feature(self, obs):
-        obs = toTensor(obs)
-        return self.shared_body(obs)
-    
     def actor(self, phi):
-        return F.tanh(self.fc_action(self.network.actor_body(phi)))
+        return F.tanh(self.fc_action(self.actor_body(phi)))
     
     def critic(self, phi, a):
-        return self.fc_critic(self.network.critic_body(phi, a))
+        return self.fc_critic(self.critic_body(phi, a))
 
 class GaussianActorCriticNet(ActorCriticNet):
     def __init__(self,
