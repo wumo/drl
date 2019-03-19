@@ -19,6 +19,8 @@ class PPOStorageBuffer(StorageBuffer):
         self.advantages = [None] * size
         self.returns = [None] * size
 
+
+# Proximal Policy Optimization Algorithms, Schulman et al. 2017
 class PPOAgent(BaseAgent):
     def __init__(self, config):
         super().__init__(config)

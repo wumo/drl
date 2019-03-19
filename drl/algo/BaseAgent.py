@@ -58,7 +58,7 @@ class BaseAgent:
     def run_steps(self):
         config = self.config
         output = json.dumps(toJson(config, 1), separators=(',', ':\t'), indent=4, sort_keys=True)
-        print(output)
+        config.logger.info(output)
         agent_name = self.__class__.__name__
         t0 = time.time()
         mean_steps_per_s = 0

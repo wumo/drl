@@ -23,13 +23,6 @@ class DQNAgent(BaseAgent):
         
         self.batch_indices = range_tensor(self.replay.batch_size)
     
-    def eval_step(self, state):
-        self.config.state_normalizer.set_read_only()
-        q = self.network(self.config.state_normalizer(state))
-        action = np.argmax(toNumpy(q))
-        self.config.state_normalizer.unset_read_only()
-        return action
-    
     def step(self):
         config = self.config
         
@@ -54,7 +47,7 @@ class DQNAgent(BaseAgent):
         
         if self.total_steps > config.exploration_steps:
             # minibatch gradient descent
-            experiences = self.replay.sample()
+            experiences = self.replay.sample(config.batch_size)
             states, actions, rewards, next_states, terminals = experiences
             states = config.state_normalizer(states)
             next_states = config.state_normalizer(next_states)

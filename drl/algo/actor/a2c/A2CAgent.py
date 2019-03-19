@@ -6,7 +6,7 @@ from torch.nn.utils import clip_grad_norm_
 
 class A2CStorageBuffer(StorageBuffer):
     def __init__(self, size):
-        StorageBuffer.__int__(self, size)
+        super().__int__(size)
         self.rewards = [None] * size
         self.values = [None] * size
         self.log_pi = [None] * size

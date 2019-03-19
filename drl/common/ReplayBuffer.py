@@ -2,9 +2,8 @@ import numpy as np
 from drl.util.utils import combined_shape
 
 class ReplayBuffer:
-    def __init__(self, env, memory_size, batch_size, stack=1):
+    def __init__(self, env, memory_size, stack=1):
         self.memory_size = memory_size
-        self.batch_size = batch_size
         self.state_shape = env.observation_space.shape
         self.state_dtype = env.observation_space.dtype
         self.action_shape = env.action_space.shape
@@ -45,8 +44,7 @@ class ReplayBuffer:
         for experience in experiences:
             self.store(experience)
     
-    def sample(self, batch_size=None):
-        if batch_size is None: batch_size = self.batch_size
+    def sample(self, batch_size):
         sampled_indices = np.random.randint(0, self.size, size=batch_size)
         sampled_actions = self.actions[sampled_indices]
         sampled_rewards = self.rewards[sampled_indices]

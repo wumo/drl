@@ -7,7 +7,7 @@ class DQNConfig(AgentConfig):
         self.target_network_update_freq = None
         self.exploration_steps = None
         self.history_length = None
+        self.batch_size = None
         self.double_q = False
         self.tag = 'dqn'
         self.random_action_prob = None
-        

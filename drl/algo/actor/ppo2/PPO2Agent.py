@@ -19,6 +19,7 @@ class PPO2StorageBuffer(StorageBuffer):
         self.advantages = [None] * size
         self.returns = [None] * size
 
+# http://spinningup.openai.com/en/latest/algorithms/ppo.html
 class PPO2Agent(BaseAgent):
     def __init__(self, config):
         super().__init__(config)
