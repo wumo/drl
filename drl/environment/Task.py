@@ -7,7 +7,7 @@ from .SingleProcessVecEnv import SingleProcessVecEnv
 from .SubProcessesVecEnv import SubProcessesVecEnv
 # from drl.bench.monitor import Monitor
 from drl.util.misc import mkdir
-from drl.environment.atari_wrappers import make_atari, wrap_deepmind, TransposeImage
+from drl.environment.atari_wrappers import make_atari, wrap_deepmind
 from drl.environment.atari_wrappers import FrameStack
 
 class Monitor(gym.core.Wrapper):
@@ -34,18 +34,8 @@ def configure_env_maker(env_name, rank, log_dir=None, seed=np.random.randint(int
             env = make_atari(env_name)
         env.seed(seed + rank)
         env = Monitor(env)
-        # if log_dir is not None:
-        #     env = Monitor(env, filename=join(log_dir, str(rank)), allow_early_resets=True)
         if is_atari:
-            env = wrap_deepmind(env,
-                                episode_life=episode_life,
-                                clip_rewards=False,
-                                frame_stack=False,
-                                scale=False)
-            obs_shape = env.observation_space.shape
-            # if len(obs_shape) == 3:
-            #     env = TransposeImage(env)
-            env = FrameStack(env, history_length)
+            env = wrap_deepmind(env, episode_life=episode_life, frame_stack=True, history_length=history_length)
         return env
     
     return maker

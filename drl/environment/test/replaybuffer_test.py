@@ -1,6 +1,7 @@
 import gym
 from drl.environment.atari_wrappers import make_atari, wrap_deepmind, FrameStack
 from drl.common.ReplayBuffer import ReplayBuffer
+from drl.common.Normalizer import ImageNormalizer
 import numpy as np
 import pygame
 from pygame import display, time, surfarray
@@ -32,17 +33,24 @@ if __name__ == '__main__':
     screen = display.set_mode((w, h))
     
     env = make_atari('BreakoutNoFrameskip-v4')
-    env = wrap_deepmind(env,
-                        episode_life=True,
-                        clip_rewards=False,
-                        frame_stack=False,
-                        scale=False)
-    obs_shape = env.observation_space.shape
-    env = FrameStack(env, k)
+    env = wrap_deepmind(env)
     
-    replay = ReplayBuffer(env, memory_size=int(1e6), batch_size=batch_size, stack=k)
+    replay = ReplayBuffer(env, memory_size=int(1e5), batch_size=batch_size, stack=k)
     
-    state = env.reset()
+    seed = 0
+    env.seed(seed)
+    np.random.seed(seed)
+    normalizer = ImageNormalizer()
+    state = normalizer(env.reset())
+    while replay.size < replay.memory_size:
+        action = env.action_space.sample()
+        next_state, reward, done, info = env.step(action)
+        if done: next_state = env.reset()
+        next_state = normalizer(next_state)
+        replay.store([state, action, reward, next_state, done])
+        state = next_state
+        print(replay.size)
+    
     while running:
         # clock.tick(FPS)
         for event in pygame.event.get():
@@ -53,10 +61,11 @@ if __name__ == '__main__':
         action = env.action_space.sample()
         next_state, reward, done, info = env.step(action)
         if done: next_state = env.reset()
+        next_state = normalizer(next_state)
         replay.store([state, action, reward, next_state, done])
-        if replay.size < replay.memory_size:
-            for _ in range(replay.memory_size):
-                replay.store([state, action, reward, next_state, done])
+        # if replay.size < replay.memory_size:
+        #     for _ in range(replay.memory_size):
+        #         replay.store([state, action, reward, next_state, done])
         state = next_state
         print(replay.size)
         screen.fill((255, 255, 255))

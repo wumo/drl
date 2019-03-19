@@ -16,7 +16,7 @@ class ReplayBuffer:
                                     dtype=self.state_dtype)
         self.actions = np.zeros(combined_shape(memory_size, self.action_shape), dtype=self.action_dtype)
         self.rewards = np.zeros(memory_size, dtype=np.float32)
-        self.dones = np.zeros(memory_size, dtype=np.float32)
+        self.dones = np.zeros(memory_size, dtype=np.int)
         self.state_ptr = self.stack - 1
         self.ptr = 0
         self.size = 0
@@ -28,10 +28,12 @@ class ReplayBuffer:
         next_state = next_state if self.stack == 1 else next_state[-1]
         self.states[self.state_ptr] = state
         self.next_states[self.state_ptr] = next_state
-        if self.size == 0:  # first element
+        
+        if self.size == 0 and self.stack > 1:  # stack first (self.stack-1) elements
             for i in range(self.state_ptr):
                 self.states[i] = state
                 self.next_states[i] = next_state
+        
         self.actions[self.ptr] = action
         self.rewards[self.ptr] = reward
         self.dones[self.ptr] = done

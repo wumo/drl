@@ -6,6 +6,7 @@ from drl.network.network_heads import VanillaNet, DuelingNet, NatureConvBody
 from drl.network.network_bodies import FCBody
 from drl.common.ReplayBuffer import ReplayBuffer
 from drl.common.Schedule import LinearSchedule
+from drl.common.Normalizer import ImageNormalizer, SignNormalizer
 from drl.util.logger import get_logger
 from drl.util.torch_utils import random_seed, select_device
 
@@ -46,6 +47,9 @@ def dqn_pixel_atari(game, tag=""):
     
     config.replay_fn = lambda: ReplayBuffer(config.eval_env, memory_size=int(1e6), batch_size=32,
                                             stack=config.history_length)
+    
+    config.state_normalizer = ImageNormalizer()
+    config.reward_normalizer = SignNormalizer()
     
     config.random_action_prob = LinearSchedule(1.0, 0.01, 1e6)
     config.discount = 0.99
