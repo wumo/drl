@@ -4,7 +4,7 @@ class PPO2Config(AgentConfig):
     def __init__(self):
         super().__init__()
         self.history_length = 4
-        self.tag = 'a2c'
+        self.tag = 'ppo'
         self.entropy_weight = 0
         self.use_gae = True
         self.gae_tau = 1.0

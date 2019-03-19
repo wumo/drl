@@ -11,9 +11,9 @@ import torch
 import torch.nn.functional as F
 from torch.distributions import Normal, Categorical
 
-class VanillaNet(nn.Module, BaseNet):
+class VanillaNet(nn.Module):
     def __init__(self, output_dim, body):
-        super(VanillaNet, self).__init__()
+        super().__init__()
         self.fc_head = layer_init(nn.Linear(body.feature_dim, output_dim))
         self.body = body
         self.to(DEVICE)
@@ -23,9 +23,9 @@ class VanillaNet(nn.Module, BaseNet):
         y = self.fc_head(phi)
         return y
 
-class DuelingNet(nn.Module, BaseNet):
+class DuelingNet(nn.Module):
     def __init__(self, action_dim, body):
-        super(DuelingNet, self).__init__()
+        super().__init__()
         self.fc_value = layer_init(nn.Linear(body.feature_dim, 1))
         self.fc_advantage = layer_init(nn.Linear(body.feature_dim, action_dim))
         self.body = body
@@ -38,9 +38,9 @@ class DuelingNet(nn.Module, BaseNet):
         q = value.expand_as(advantange) + (advantange - advantange.mean(1, keepdim=True).expand_as(advantange))
         return q
 
-class CategoricalNet(nn.Module, BaseNet):
+class CategoricalNet(nn.Module):
     def __init__(self, action_dim, num_atoms, body):
-        super(CategoricalNet, self).__init__()
+        super().__init__()
         self.fc_categorical = layer_init(nn.Linear(body.feature_dim, action_dim * num_atoms))
         self.action_dim = action_dim
         self.num_atoms = num_atoms
@@ -54,9 +54,9 @@ class CategoricalNet(nn.Module, BaseNet):
         log_prob = F.log_softmax(pre_prob, dim=-1)
         return prob, log_prob
 
-class QuantileNet(nn.Module, BaseNet):
+class QuantileNet(nn.Module):
     def __init__(self, action_dim, num_quantiles, body):
-        super(QuantileNet, self).__init__()
+        super().__init__()
         self.fc_quantiles = layer_init(nn.Linear(body.feature_dim, action_dim * num_quantiles))
         self.action_dim = action_dim
         self.num_quantiles = num_quantiles
@@ -69,9 +69,9 @@ class QuantileNet(nn.Module, BaseNet):
         quantiles = quantiles.view((-1, self.action_dim, self.num_quantiles))
         return quantiles
 
-class OptionCriticNet(nn.Module, BaseNet):
+class OptionCriticNet(nn.Module):
     def __init__(self, body, action_dim, num_options):
-        super(OptionCriticNet, self).__init__()
+        super().__init__()
         self.fc_q = layer_init(nn.Linear(body.feature_dim, num_options))
         self.fc_pi = layer_init(nn.Linear(body.feature_dim, num_options * action_dim))
         self.fc_beta = layer_init(nn.Linear(body.feature_dim, num_options))

@@ -23,8 +23,6 @@ class PPOStorageBuffer(StorageBuffer):
 class PPOAgent(BaseAgent):
     def __init__(self, config):
         super().__init__(config)
-        self.config = config
-        
         self.network = config.network_fn()
         self.optimizer = config.optimizer_fn(self.network.parameters())
         

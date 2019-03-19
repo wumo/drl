@@ -19,7 +19,7 @@ def dqn_cart_pole():
     config.network_fn = lambda: VanillaNet(config.action_dim, FCBody(config.state_dim))
     # config.network_fn = lambda: DuelingNet(config.action_dim, FCBody(config.state_dim))
     
-    config.batch_size = 32
+    config.batch_size = 10
     config.replay_fn = lambda: ReplayBuffer(config.eval_env, memory_size=int(1e4))
     
     config.random_action_prob = LinearSchedule(1.0, 0.1, 1e4)
@@ -66,5 +66,5 @@ if __name__ == '__main__':
     # game = 'MountainCar-v0'
     
     game = 'BreakoutNoFrameskip-v4'
-    dqn_cart_pole()
-    # dqn_pixel_atari(game, "bench-")
+    # dqn_cart_pole()
+    dqn_pixel_atari(game, "bench-")

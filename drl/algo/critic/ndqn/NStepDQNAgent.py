@@ -9,8 +9,6 @@ from torch.nn.utils import clip_grad_norm_
 class NStepDQNAgent(BaseAgent):
     def __init__(self, config):
         super().__init__(config)
-        self.config = config
-        
         self.network = config.network_fn()
         self.target_network = config.network_fn()
         self.target_network.load_state_dict(self.network.state_dict())

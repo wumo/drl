@@ -23,8 +23,6 @@ class PPO2StorageBuffer(StorageBuffer):
 class PPO2Agent(BaseAgent):
     def __init__(self, config):
         super().__init__(config)
-        self.config = config
-        
         self.network = config.network_fn()
         self.act_optimizer = config.act_optimizer_fn(self.network.actor_params + self.network.shared_params)
         self.critic_optimizer = config.critic_optimizer_fn(self.network.critic_params + self.network.shared_params)

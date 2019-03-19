@@ -7,5 +7,5 @@ class NStepDQNConfig(AgentConfig):
         self.exploration_steps = None
         self.history_length = None
         self.double_q = False
-        self.tag = 'dqn'
+        self.tag = 'ndqn'
         self.random_action_prob = None
