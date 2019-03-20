@@ -21,6 +21,9 @@ class ReplayBuffer:
         self.ptr = 0
         self.size = 0
     
+    def index(self, index):
+        return (index + self.memory_size) % self.memory_size
+    
     def increment(self):
         self.ptr = (self.ptr + 1) % self.memory_size
         self.size = min(self.size + 1, self.memory_size)
@@ -49,9 +52,10 @@ class ReplayBuffer:
         state = state[-1]
         if self.isFull():  # ptr overlap heading elements, (self.ptr+1) will be the first state.
             self.memo_state(self.states[self.ptr])  # current state becomes history
-            if self.terminals[self.ptr + 1]:
+            first_index = (self.ptr + 1) % self.memory_size
+            if self.terminals[first_index]:
                 # first state is start state, memo will only contain it.
-                self.memo_start_state(self.states[self.ptr + 1])
+                self.memo_start_state(self.states[first_index])
         elif self.isEmpty():
             self.memo_start_state(state)
         self.states[self.ptr] = state
@@ -80,17 +84,17 @@ class ReplayBuffer:
     
     def history_concat(self, indices):
         states = np.zeros(combined_shape(indices.shape[0], self.stack, self.state_shape), dtype=self.state_dtype)
-        for i, indice in enumerate(indices):
-            memo_indice = self.memo.maxlen
+        for i, index in enumerate(indices):
+            memo_index = self.memo.maxlen
             for j in reversed(range(self.stack)):
-                if indice == self.ptr:  # first element, first from itself, then from memo
-                    states[i][j] = self.memo[memo_indice] if memo_indice < self.memo.maxlen else self.states[indice]
-                    memo_indice -= 1
-                elif self.terminals[indice]:
-                    states[i][j] = self.states[indice]
+                if index == self.ptr:  # first element, first from itself, then from memo
+                    states[i][j] = self.memo[memo_index] if memo_index < self.memo.maxlen else self.states[index]
+                    memo_index -= 1
+                elif self.terminals[index]:
+                    states[i][j] = self.states[index]
                 else:
-                    states[i][j] = self.states[indice]
-                    indice -= 1
+                    states[i][j] = self.states[index]
+                    index = (index - 1 + self.memory_size) % self.memory_size
         return states
     
     def sample(self, batch_size):
