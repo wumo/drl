@@ -19,6 +19,15 @@ class DQNAgent(BaseAgent):
         self.states = self.task.reset()
         
         self.batch_indices = range_tensor(self.config.batch_size)
+        self.saved = False
+        
+    def eval_step(self, state):
+        self.config.state_normalizer.set_read_only()
+        state = self.config.state_normalizer(state)
+        q = self.network(state)
+        action = np.argmax(toNumpy(q))
+        self.config.state_normalizer.unset_read_only()
+        return action
     
     def step(self):
         config = self.config
@@ -31,12 +40,11 @@ class DQNAgent(BaseAgent):
             actions = epsilon_greedy(epsilon, toNumpy(q))
             
             next_states, rewards, dones, infos = self.task.step(actions)
-            state, reward, next_state, done, info = self.states[0], rewards[0], next_states[0], int(dones[0]), infos[0]
+            rewards = config.reward_normalizer(rewards)
+            self.replay.store([self.states[0], actions[0], rewards[0], next_states[0], dones[0]])
+            
             self.states = next_states
             self.total_steps += 1
-            
-            reward = config.reward_normalizer(reward)
-            self.replay.store([state, actions[0], reward, next_state, done])
         
         if self.total_steps > config.exploration_steps:
             # minibatch gradient descent
