@@ -84,6 +84,7 @@ class BaseAgent:
                 used_mem = process.memory_info().rss
                 self.logger.add_scalar("mean_rewards", mean_rewards, self.total_steps)
                 self.logger.add_scalar("used_mem", used_mem / 1024 / 1024 / 1024, self.total_steps)
+                self.logger.add_scalar("steps_per_s", steps_per_s, self.total_steps)
                 self.logger.info(f'total steps {self.total_steps}, '
                                  f'returns {mean_rewards:.2f}'
                                  f'/{median_rewards:.2f}'
