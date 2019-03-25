@@ -8,6 +8,7 @@ from drl.algo.actor.ppo.ppo_example import ppo_pixel_atari
 from drl.util.torch_utils import random_seed, select_device
 from drl.util.logger import experiment_count
 import argparse
+import gym
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -21,6 +22,13 @@ if __name__ == '__main__':
     tag = args.tag
     games = args.env
     algos = args.algo
+    
+    for game in games:
+        try:
+            env = gym.make(game)
+            env.close()
+        except:
+            print(f'error load {game}')
     
     print(f'games: {games}')
     print(f'algorithms: {[algo for algo in algos]}')
