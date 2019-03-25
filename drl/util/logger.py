@@ -5,6 +5,7 @@
 #######################################################################
 
 from tensorboardX import SummaryWriter
+from drl.util.misc import mkdir
 import logging
 from pathlib import Path
 
@@ -88,3 +89,18 @@ class Logger(object):
         if step is None:
             step = self.get_step(tag)
         self.writer.add_histogram(tag, values, step)
+
+def experiment_count():
+    home = str(Path.home())
+    mkdir(f'{home}/.experiment')
+    filepath = f'{home}/.experiment/count'
+    count = 1
+    if os.path.exists(filepath):
+        with open(filepath, 'r+') as f:
+            try:
+                count = int(f.read()) + 1
+            except:
+                pass
+    with open(filepath, 'w+') as f:
+        f.write(str(count))
+    return count
