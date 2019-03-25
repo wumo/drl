@@ -14,7 +14,7 @@ if __name__ == '__main__':
                         default=['a2c_pixel_atari', 'ppo_pixel_atari', 'nstepdqn_pixel_atari',
                                  'dqn_pixel_atari', 'categorical_dqn_pixel_atari',
                                  'qr_dqn_pixel_atari', 'option_critic_pixel_atari'])
-    parser.add_argument('--env', nargs='+', default='BreakoutNoFrameskip-v4')
+    parser.add_argument('--env', nargs='+', default=['BreakoutNoFrameskip-v4'])
     parser.add_argument('--tag', default='bench')
     args = parser.parse_args()
     tag = args.tag
