@@ -78,3 +78,4 @@ if __name__ == '__main__':
     # game = 'Reacher-v2'
     # a2c_pixel_atari(game, "bench")
     # a2c_continuous(game)
+    a2c_cart_pole()
