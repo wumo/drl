@@ -5,4 +5,4 @@ Refactored [ShangtongZhang's DeepRL](https://github.com/ShangtongZhang/DeepRL) t
 
 My contributions are:
 * New implementations of PPO and VPG according to [spinningup](https://spinningup.openai.com/en/latest/).
-* Optimize to replay buffer of DQN to reduce the memory footprint.
+* Optimize the replay buffer of DQN to reduce the memory footprint.
